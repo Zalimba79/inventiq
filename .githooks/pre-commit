@@ -1,0 +1,62 @@
+#!/bin/sh
+# Pre-commit hook for Inventiq project
+
+echo "Running pre-commit checks..."
+
+# Check if we're on main branch and prevent direct commits
+branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+if [ "$branch" = "main" ]; then
+  echo "❌ Direct commits to main branch are not allowed!"
+  echo "Please create a feature branch or commit to develop branch."
+  echo "Use: git checkout -b feature/your-feature-name"
+  exit 1
+fi
+
+# Run type checking
+echo "🔍 Running TypeScript type check..."
+npm run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript type check failed. Please fix type errors before committing."
+  exit 1
+fi
+
+# Run linting
+echo "🧹 Running ESLint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint checks failed. Please fix linting errors before committing."
+  echo "You can run 'npm run lint:fix' to auto-fix some issues."
+  exit 1
+fi
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test -- --passWithNoTests --silent
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix failing tests before committing."
+  exit 1
+fi
+
+# Check for sensitive files
+echo "🔒 Checking for sensitive files..."
+if git diff --cached --name-only | grep -E "\.(env|key|pem|p12|pfx)$"; then
+  echo "❌ Sensitive files detected in staging area!"
+  echo "Please remove them before committing."
+  exit 1
+fi
+
+# Check for large files (>5MB)
+echo "📏 Checking for large files..."
+git diff --cached --name-only | while read FILE; do
+  if [ -f "$FILE" ]; then
+    SIZE=$(stat -c%s "$FILE" 2>/dev/null || stat -f%z "$FILE" 2>/dev/null || echo 0)
+    if [ $SIZE -gt 5242880 ]; then
+      echo "❌ Large file detected: $FILE ($(echo $SIZE | awk '{print int($1/1024/1024)}')MB)"
+      echo "Please use Git LFS for large files or exclude them."
+      exit 1
+    fi
+  fi
+done
+
+echo "✅ All pre-commit checks passed!"
+exit 0
