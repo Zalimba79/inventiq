@@ -416,12 +416,161 @@ git remote -v
 git fsck
 ```
 
+## GitHub Integration
+
+### Repository Setup
+
+#### Initial Repository Creation on GitHub
+1. Go to https://github.com/Zalimba79
+2. Click "New repository"
+3. Repository name: `inventiq`
+4. Description: "AI-Powered Inventory Management System"
+5. Keep **Public** or **Private** (your choice)
+6. **DO NOT** initialize with README, .gitignore, or license
+7. Click "Create repository"
+
+#### Configure Remote and Push
+```bash
+# Add GitHub remote
+git remote add origin https://github.com/Zalimba79/inventiq.git
+
+# Verify remote configuration
+git remote -v
+
+# Push main branch with upstream tracking
+git checkout main
+git push -u origin main
+
+# Push develop branch with upstream tracking
+git checkout develop
+git push -u origin develop
+
+# Push all tags
+git push origin --tags
+```
+
+### GitHub Workflow
+
+#### Setting Up Branch Protection
+1. Go to repository Settings → Branches
+2. Add rule for `main` branch:
+   - Require pull request reviews before merging
+   - Require status checks to pass before merging
+   - Require branches to be up to date before merging
+   - Restrict pushes that create files
+
+3. Add rule for `develop` branch:
+   - Require pull request reviews before merging
+   - Require status checks to pass before merging
+
+#### Pull Request Process
+```bash
+# 1. Create feature branch
+git checkout develop
+git pull origin develop
+git checkout -b feature/new-feature
+
+# 2. Make changes and commit
+git add .
+git commit -m "feat(scope): implement new feature"
+
+# 3. Push feature branch
+git push -u origin feature/new-feature
+
+# 4. Create Pull Request on GitHub
+# - Base: develop
+# - Compare: feature/new-feature
+# - Add description and reviewers
+
+# 5. After PR approval and merge
+git checkout develop
+git pull origin develop
+git branch -d feature/new-feature
+```
+
+#### Release Workflow on GitHub
+```bash
+# 1. Create release branch
+git checkout develop
+git pull origin develop
+git checkout -b release/v1.0.0
+
+# 2. Update version and changelog
+# Edit package.json, CHANGELOG.md
+
+# 3. Push release branch
+git push -u origin release/v1.0.0
+
+# 4. Create PR: release/v1.0.0 → main
+# 5. After merge, create GitHub Release
+# 6. Merge changes back to develop
+```
+
+### GitHub Actions Integration
+
+#### Automated Workflows
+Create `.github/workflows/ci.yml`:
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+```
+
+### Issue and Project Management
+
+#### Issue Templates
+Create `.github/ISSUE_TEMPLATE/`:
+- Bug reports
+- Feature requests
+- Documentation improvements
+
+#### Pull Request Template
+Create `.github/pull_request_template.md`:
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Refactoring
+
+## Testing
+- [ ] Tests pass locally
+- [ ] Added new tests if needed
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+```
+
 ## Environment Setup
 
 ### New Developer Setup
 ```bash
 # 1. Clone repository
-git clone <repository-url>
+git clone https://github.com/Zalimba79/inventiq.git
 cd inventiq
 
 # 2. Install dependencies
