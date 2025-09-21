@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI API Test - Inventiq</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        #preview {
+            max-width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 Inventiq AI Test</h1>
+    <p>Test the AI product recognition API</p>
+    
+    <div>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="testWithFile()">Test with Selected Image</button>
+    </div>
+    
+    <img id="preview" style="display:none;">
+    
+    <div id="result"></div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const result = document.getElementById('result');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function testWithFile() {
+            const file = fileInput.files[0];
+            if (!file) {
+                result.textContent = 'Please select an image first';
+                result.className = 'error';
+                return;
+            }
+
+            result.textContent = '🔄 Analyzing image...';
+            result.className = '';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64Image = e.target.result;
+                
+                try {
+                    const response = await fetch('/api/ai/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            images: [base64Image],
+                            sessionId: 'web-test-' + Date.now()
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        result.className = 'success';
+                        result.textContent = `✅ Analysis Successful!\n\n` +
+                            `Product: ${data.analysis.name}\n` +
+                            `Brand: ${data.analysis.brand || 'Unknown'}\n` +
+                            `Category: ${data.analysis.category}\n` +
+                            `Description: ${data.analysis.description}\n` +
+                            `Features: ${data.analysis.features.join(', ')}\n` +
+                            `Confidence: ${(data.analysis.confidence * 100).toFixed(1)}%\n\n` +
+                            `Overall Score: ${(data.confidenceScores.overall * 100).toFixed(1)}%\n` +
+                            `Processing Time: ${data.processingTime}ms`;
+                    } else {
+                        result.className = 'error';
+                        result.textContent = `❌ Error: ${data.error}\n\n` +
+                            (data.details ? JSON.stringify(data.details, null, 2) : '');
+                    }
+                } catch (error) {
+                    result.className = 'error';
+                    result.textContent = `❌ Request failed: ${error.message}`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Type should be one of the following:
+# * feat (new feature)
+# * fix (bug fix)
+# * docs (documentation)
+# * style (formatting, missing semicolons, etc; no code change)
+# * refactor (refactoring production code)
+# * test (adding tests, refactoring test; no production code change)
+# * chore (updating build tasks, package manager configs, etc; no production code change)
+# * perf (performance improvements)
+# * ci (continuous integration related)
+# * build (build related changes)
+# * revert (reverting a previous commit)
+#
+# Scope is optional and should be the area of the application affected:
+# * api (API routes)
+# * ui (UI components)
+# * store (State management)
+# * camera (Camera functionality)
+# * ai (AI integration)
+# * products (Product management)
+# * auth (Authentication)
+# * db (Database)
+# * config (Configuration)
+#
+# Subject should use imperative mood and be 50 characters or less
+# Body should explain what and why vs. how (optional)
+# Footer should reference issues (optional)
+#
+# Examples:
+# feat(camera): add photo capture with quantity selection
+# fix(api): resolve OpenAI API timeout issue
+# docs: update setup instructions for new developers
+# refactor(store): simplify product state management
+# test(camera): add unit tests for photo capture component

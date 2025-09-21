@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Product status enum
+enum ProductStatus {
+  DRAFT        // Just created with photos
+  QUEUED       // Selected for AI analysis
+  ANALYZING    // Currently being analyzed
+  ANALYZED     // AI analysis complete
+  VALIDATED    // User validated the AI results
+  CONFIRMED    // Final confirmed product
+}
+
+// Main Product model
+model Product {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  status      ProductStatus @default(DRAFT)
+  
+  // AI Analysis Results (populated after analysis)
+  name        String?
+  brand       String?
+  model       String?
+  category    String?
+  subcategory String?
+  description String?
+  features    Json?         // Array of features
+  condition   String?
+  confidence  Float?
+  
+  // Estimated value
+  estimatedMin  Float?
+  estimatedMax  Float?
+  currency      String        @default("USD")
+  
+  // Relationships
+  photos      ProductPhoto[]
+  tags        Tag[]
+  analyses    Analysis[]    // History of AI analyses
+  
+  // User assignment (for future multi-user support)
+  userId      String?       @default("default-user")
+  
+  @@index([status])
+  @@index([userId])
+  @@index([category])
+}
+
+// Photos associated with products
+model ProductPhoto {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Image data
+  dataUrl     String   @db.Text  // Base64 encoded image
+  mimeType    String   @default("image/jpeg")
+  width       Int?
+  height      Int?
+  size        Int      // File size in bytes
+  
+  // Metadata
+  isPrimary   Boolean  @default(false)
+  angle       String?  // front, back, side, top, etc.
+  
+  @@index([productId])
+}
+
+// AI Analysis history for re-analysis capability
+model Analysis {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Analysis results
+  result      Json     // Full AI response
+  confidence  Float
+  service     String   @default("openai") // openai, google-vision, etc.
+  
+  // Performance metrics
+  processingTime Int   // in milliseconds
+  tokensUsed     Int?
+  
+  // User actions
+  wasAccepted Boolean  @default(false)
+  
+  @@index([productId])
+}
+
+// Tags for organizing products
+model Tag {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String?   // Hex color for UI
+  products  Product[]
+  
+  @@index([name])
+}
+
+// Analysis Queue for batch processing
+model AnalysisQueue {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  productIds  Json     // Array of product IDs to analyze
+  status      String   @default("pending") // pending, processing, completed, failed
+  
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  
+  // Results
+  successCount Int     @default(0)
+  failureCount Int     @default(0)
+  
+  @@index([status])
+}
