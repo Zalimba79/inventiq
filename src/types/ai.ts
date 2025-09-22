@@ -30,7 +30,7 @@ export interface AIAnalysisResult {
   error?: string
   processingTime: number
   service: 'openai' | 'google-vision' | 'combined'
-  rawResponse?: any
+  rawResponse?: unknown
   cached?: boolean
 }
 

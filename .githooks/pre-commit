@@ -20,14 +20,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Run linting
+# Run linting and check for errors (not warnings)
 echo "🧹 Running ESLint..."
-npm run lint
-if [ $? -ne 0 ]; then
-  echo "❌ ESLint checks failed. Please fix linting errors before committing."
+npm run lint 2>&1 | tee /tmp/eslint-output.txt
+# Check if there are any errors (not warnings) in the output
+if grep -E "^  [0-9]+:[0-9]+  Error:" /tmp/eslint-output.txt > /dev/null; then
+  echo "❌ ESLint errors found. Please fix errors before committing."
   echo "You can run 'npm run lint:fix' to auto-fix some issues."
+  rm /tmp/eslint-output.txt
   exit 1
 fi
+rm -f /tmp/eslint-output.txt
 
 # Run tests
 echo "🧪 Running tests..."

@@ -1,18 +1,17 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { 
   CheckCircle, 
   XCircle, 
   Edit2, 
   Clock,
   User,
-  Package,
-  TrendingUp
+  Package
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { useCallback, useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ValidationHistoryEntry {
   productId: string
@@ -20,7 +19,7 @@ interface ValidationHistoryEntry {
   action: 'validate' | 'reject' | 'edit'
   previousStatus: string
   newStatus: string
-  changes?: Record<string, any>
+  changes?: Record<string, unknown>
   reason?: string
   validatedBy?: string
 }
@@ -35,20 +34,16 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
   const [history, setHistory] = useState<ValidationHistoryEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    fetchHistory()
-  }, [productId, limit])
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (productId) params.append('productId', productId)
       params.append('limit', limit.toString())
 
       const response = await fetch(`/api/products/validate?${params}`)
-      const data = await response.json()
+      const data = await response.json() as { success: boolean; history?: ValidationHistoryEntry[] }
       
-      if (data.success) {
+      if (data.success && data.history) {
         setHistory(data.history)
       }
     } catch (error) {
@@ -56,7 +51,11 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [productId, limit])
+  
+  useEffect(() => {
+    void fetchHistory()
+  }, [fetchHistory])
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -85,7 +84,7 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       'DRAFT': 'outline',
       'ANALYZED': 'secondary',
       'VALIDATED': 'default',
@@ -93,7 +92,7 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     }
     
     return (
-      <Badge variant={variants[status] || 'outline'} className="text-xs">
+      <Badge variant={variants[status] ?? 'outline'} className="text-xs">
         {status}
       </Badge>
     )

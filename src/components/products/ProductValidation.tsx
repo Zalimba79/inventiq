@@ -1,12 +1,5 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useProductStore, Product } from '@/store/product-store'
 import { 
   CheckCircle, 
   XCircle, 
@@ -16,13 +9,21 @@ import {
   AlertTriangle,
   TrendingUp,
   Package,
-  Tag,
   DollarSign,
   Info,
   RefreshCw
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Image from 'next/image'
+import React, { useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+import { useProductStore, type Product } from '@/store/product-store'
 
 interface ProductValidationProps {
   productId: string
@@ -30,7 +31,167 @@ interface ProductValidationProps {
   className?: string
 }
 
-export function ProductValidation({ productId, onComplete, className }: ProductValidationProps) {
+interface EditFormProps {
+  editedProduct: Partial<Product>
+  setEditedProduct: (product: Partial<Product>) => void
+  onSave: () => void
+  onCancel: () => void
+}
+
+// Edit form component
+function ProductEditForm({ editedProduct, setEditedProduct, onSave, onCancel }: EditFormProps): React.ReactElement {
+  return (
+    <>
+      <div>
+        <Label htmlFor="name">Product Name</Label>
+        <Input
+          id="name"
+          value={editedProduct.name ?? ''}
+          onChange={(e) => setEditedProduct({...editedProduct, name: e.target.value})}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="brand">Brand</Label>
+        <Input
+          id="brand"
+          value={editedProduct.brand ?? ''}
+          onChange={(e) => setEditedProduct({...editedProduct, brand: e.target.value})}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="category">Category</Label>
+          <Input
+            id="category"
+            value={editedProduct.category ?? ''}
+            onChange={(e) => setEditedProduct({...editedProduct, category: e.target.value})}
+          />
+        </div>
+        <div>
+          <Label htmlFor="subcategory">Subcategory</Label>
+          <Input
+            id="subcategory"
+            value={editedProduct.subcategory ?? ''}
+            onChange={(e) => setEditedProduct({...editedProduct, subcategory: e.target.value})}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="condition">Condition</Label>
+        <select
+          id="condition"
+          className="w-full px-3 py-2 border rounded-md"
+          value={editedProduct.condition ?? ''}
+          onChange={(e) => setEditedProduct({...editedProduct, condition: e.target.value})}
+        >
+          <option value="">Select condition</option>
+          <option value="new">New</option>
+          <option value="like-new">Like New</option>
+          <option value="good">Good</option>
+          <option value="fair">Fair</option>
+          <option value="poor">Poor</option>
+        </select>
+      </div>
+
+      <div>
+        <Label>Estimated Value</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            placeholder="Min"
+            value={editedProduct.estimatedMin ?? ''}
+            onChange={(e) => setEditedProduct({...editedProduct, estimatedMin: parseFloat(e.target.value)})}
+          />
+          <Input
+            type="number"
+            placeholder="Max"
+            value={editedProduct.estimatedMax ?? ''}
+            onChange={(e) => setEditedProduct({...editedProduct, estimatedMax: parseFloat(e.target.value)})}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button onClick={onSave} size="sm">
+          <Save className="w-4 h-4 mr-2" />
+          Save
+        </Button>
+        <Button onClick={onCancel} size="sm" variant="outline">
+          <X className="w-4 h-4 mr-2" />
+          Cancel
+        </Button>
+      </div>
+    </>
+  )
+}
+
+// Display component for product info
+function ProductInfoDisplay({ product }: { product: Product }): React.ReactElement {
+  return (
+    <>
+      <div>
+        <span className="text-sm font-medium text-muted-foreground">Product Name</span>
+        <p className="text-lg font-semibold">{product.name ?? 'Unknown'}</p>
+      </div>
+
+      <div>
+        <span className="text-sm font-medium text-muted-foreground">Brand</span>
+        <p>{product.brand ?? 'Unknown'}</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">Category</span>
+          <p>{product.category ?? 'Uncategorized'}</p>
+        </div>
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">Subcategory</span>
+          <p>{product.subcategory ?? '-'}</p>
+        </div>
+      </div>
+
+      {product.condition && (
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">Condition</span>
+          <Badge variant="outline" className="ml-2">
+            {product.condition}
+          </Badge>
+        </div>
+      )}
+
+      {(product.estimatedMin ?? product.estimatedMax) && (
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">Estimated Value</span>
+          <p className="flex items-center gap-1">
+            <DollarSign className="w-4 h-4" />
+            {product.estimatedMin && product.estimatedMax
+              ? `${product.estimatedMin} - ${product.estimatedMax}`
+              : product.estimatedMin ?? product.estimatedMax}
+            {' '}{product.currency}
+          </p>
+        </div>
+      )}
+
+      {product.features && product.features.length > 0 && (
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">Features</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {product.features.map((feature, index) => (
+              <Badge key={index} variant="secondary">
+                {feature}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export function ProductValidation({ productId, onComplete, className }: ProductValidationProps): React.ReactElement {
   const { getProduct, updateProduct, updateProductStatus, queueProductsForAnalysis, processAnalysisQueue } = useProductStore()
   const product = getProduct(productId)
   const { toast } = useToast()
@@ -80,7 +241,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     updateProductStatus(productId, 'VALIDATED')
     toast({
       title: "Product validated",
-      description: `${product.name || 'Product'} has been validated and added to inventory`
+      description: `${product.name ?? 'Product'} has been validated and added to inventory`
     })
     onComplete?.()
   }
@@ -119,7 +280,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     return 'Low Confidence'
   }
 
-  const primaryPhoto = product.photos.find(p => p.isPrimary) || product.photos[0]
+  const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
 
   return (
     <div className={cn("max-w-4xl mx-auto p-6", className)}>
@@ -141,12 +302,14 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {primaryPhoto && (
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden mb-4">
-                <img
+            {primaryPhoto?.dataUrl && (
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden mb-4 relative">
+                <Image
                   src={primaryPhoto.dataUrl}
-                  alt={product.name || 'Product'}
-                  className="w-full h-full object-cover"
+                  alt={product.name ?? 'Product'}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
             )}
@@ -155,19 +318,23 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
             {product.photos.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {product.photos.slice(0, 4).map((photo, index) => (
-                  <div
-                    key={photo.id}
-                    className={cn(
-                      "aspect-square bg-muted rounded overflow-hidden",
-                      photo.isPrimary && "ring-2 ring-primary"
-                    )}
-                  >
-                    <img
-                      src={photo.dataUrl}
-                      alt={`View ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  photo.dataUrl && (
+                    <div
+                      key={photo.id}
+                      className={cn(
+                        "aspect-square bg-muted rounded overflow-hidden relative",
+                        photo.isPrimary && "ring-2 ring-primary"
+                      )}
+                    >
+                      <Image
+                        src={photo.dataUrl}
+                        alt={`View ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="25vw"
+                      />
+                    </div>
+                  )
                 ))}
               </div>
             )}
@@ -200,148 +367,14 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
           </CardHeader>
           <CardContent className="space-y-4">
             {isEditing ? (
-              <>
-                <div>
-                  <Label htmlFor="name">Product Name</Label>
-                  <Input
-                    id="name"
-                    value={editedProduct.name || ''}
-                    onChange={(e) => setEditedProduct({...editedProduct, name: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="brand">Brand</Label>
-                  <Input
-                    id="brand"
-                    value={editedProduct.brand || ''}
-                    onChange={(e) => setEditedProduct({...editedProduct, brand: e.target.value})}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={editedProduct.category || ''}
-                      onChange={(e) => setEditedProduct({...editedProduct, category: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="subcategory">Subcategory</Label>
-                    <Input
-                      id="subcategory"
-                      value={editedProduct.subcategory || ''}
-                      onChange={(e) => setEditedProduct({...editedProduct, subcategory: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="condition">Condition</Label>
-                  <select
-                    id="condition"
-                    className="w-full px-3 py-2 border rounded-md"
-                    value={editedProduct.condition || ''}
-                    onChange={(e) => setEditedProduct({...editedProduct, condition: e.target.value})}
-                  >
-                    <option value="">Select condition</option>
-                    <option value="new">New</option>
-                    <option value="like-new">Like New</option>
-                    <option value="good">Good</option>
-                    <option value="fair">Fair</option>
-                    <option value="poor">Poor</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label>Estimated Value</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={editedProduct.estimatedMin || ''}
-                      onChange={(e) => setEditedProduct({...editedProduct, estimatedMin: parseFloat(e.target.value)})}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={editedProduct.estimatedMax || ''}
-                      onChange={(e) => setEditedProduct({...editedProduct, estimatedMax: parseFloat(e.target.value)})}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={handleSave} size="sm">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
-                  <Button onClick={handleCancel} size="sm" variant="outline">
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </div>
-              </>
+              <ProductEditForm
+                editedProduct={editedProduct}
+                setEditedProduct={setEditedProduct}
+                onSave={handleSave}
+                onCancel={handleCancel}
+              />
             ) : (
-              <>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Product Name</span>
-                  <p className="text-lg font-semibold">{product.name || 'Unknown'}</p>
-                </div>
-
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Brand</span>
-                  <p>{product.brand || 'Unknown'}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Category</span>
-                    <p>{product.category || 'Uncategorized'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Subcategory</span>
-                    <p>{product.subcategory || '-'}</p>
-                  </div>
-                </div>
-
-                {product.condition && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Condition</span>
-                    <Badge variant="outline" className="ml-2">
-                      {product.condition}
-                    </Badge>
-                  </div>
-                )}
-
-                {(product.estimatedMin || product.estimatedMax) && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Estimated Value</span>
-                    <p className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4" />
-                      {product.estimatedMin && product.estimatedMax
-                        ? `${product.estimatedMin} - ${product.estimatedMax}`
-                        : product.estimatedMin || product.estimatedMax}
-                      {' '}{product.currency}
-                    </p>
-                  </div>
-                )}
-
-                {product.features && product.features.length > 0 && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Features</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {product.features.map((feature, index) => (
-                        <Badge key={index} variant="secondary">
-                          {feature}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
+              <ProductInfoDisplay product={product} />
             )}
           </CardContent>
         </Card>
@@ -369,7 +402,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleReanalyze}
+                onClick={() => { void handleReanalyze() }}
                 disabled={isReanalyzing}
               >
                 {isReanalyzing ? (

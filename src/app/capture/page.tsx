@@ -1,11 +1,13 @@
 "use client"
 
-import { DirectPhotoCapture } from '@/components/camera/DirectPhotoCapture'
-import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
-export default function CapturePage() {
+import { DirectPhotoCaptureRefactored } from '@/components/camera/DirectPhotoCaptureRefactored'
+import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor'
+import { Button } from '@/components/ui/button'
+
+export default function CapturePage(): JSX.Element {
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Header */}
@@ -29,8 +31,11 @@ export default function CapturePage() {
 
       {/* Main Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <DirectPhotoCapture className="h-full" />
+        <DirectPhotoCaptureRefactored className="h-full" />
       </div>
+      
+      {/* Performance Monitor (development only) */}
+      <PerformanceMonitor />
     </div>
   )
 }

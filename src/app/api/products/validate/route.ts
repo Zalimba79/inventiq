@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 // Validation request schema
@@ -34,7 +34,7 @@ interface ValidationHistory {
   action: 'validate' | 'reject' | 'edit'
   previousStatus: string
   newStatus: string
-  changes?: Record<string, any>
+  changes?: Record<string, unknown>
   reason?: string
   validatedBy?: string
 }
@@ -42,9 +42,9 @@ interface ValidationHistory {
 // In-memory storage for validation history (replace with database in production)
 const validationHistory: ValidationHistory[] = []
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const body = await request.json()
+    const body = await request.json() as { productIds?: string[]; [key: string]: unknown }
     
     // Check if it's a bulk validation request
     if (Array.isArray(body.productIds)) {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleSingleValidation(data: z.infer<typeof ValidateRequestSchema>) {
+function handleSingleValidation(data: z.infer<typeof ValidateRequestSchema>): NextResponse {
   const { productId, action, updates, reason, validatedBy } = data
   
   // Record validation history
@@ -90,7 +90,7 @@ async function handleSingleValidation(data: z.infer<typeof ValidateRequestSchema
     newStatus: action === 'validate' ? 'VALIDATED' : action === 'reject' ? 'DRAFT' : 'ANALYZED',
     changes: updates,
     reason,
-    validatedBy: validatedBy || 'default-user'
+    validatedBy: validatedBy ?? 'default-user'
   }
   
   validationHistory.push(historyEntry)
@@ -108,7 +108,7 @@ async function handleSingleValidation(data: z.infer<typeof ValidateRequestSchema
   })
 }
 
-async function handleBulkValidation(data: z.infer<typeof BulkValidateRequestSchema>) {
+function handleBulkValidation(data: z.infer<typeof BulkValidateRequestSchema>): NextResponse {
   const { productIds, action, reason, validatedBy } = data
   
   const results = []
@@ -122,7 +122,7 @@ async function handleBulkValidation(data: z.infer<typeof BulkValidateRequestSche
       previousStatus: 'ANALYZED',
       newStatus: action === 'validate' ? 'VALIDATED' : 'DRAFT',
       reason,
-      validatedBy: validatedBy || 'default-user'
+      validatedBy: validatedBy ?? 'default-user'
     }
     
     validationHistory.push(historyEntry)
@@ -158,10 +158,10 @@ function getSuccessMessage(action: string, count: number): string {
 }
 
 // GET endpoint to retrieve validation history
-export async function GET(request: NextRequest) {
+export function GET(request: NextRequest): NextResponse {
   const searchParams = request.nextUrl.searchParams
   const productId = searchParams.get('productId')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  const limit = parseInt(searchParams.get('limit') ?? '10')
   
   let history = validationHistory
   

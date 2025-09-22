@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { analyzeProductWithGPT4Vision, analyzeMultipleImages } from '@/lib/ai/openai-service'
-import { calculateConfidenceScore } from '@/lib/ai/confidence-scorer'
+import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { calculateConfidenceScore } from '@/lib/ai/confidence-scorer'
+import { analyzeProductWithGPT4Vision, analyzeMultipleImages } from '@/lib/ai/openai-service'
+import type { AnalyzeApiResponse, AnalyzeRequestBody, ServiceStatusResponse, ErrorApiResponse } from '@/types/api'
 
 // Request validation schema
 const AnalyzeRequestSchema = z.object({
@@ -18,12 +20,16 @@ const AnalyzeRequestSchema = z.object({
 })
 
 // Simple in-memory cache (replace with Redis in production)
-const analysisCache = new Map<string, any>()
-const CACHE_TTL = parseInt(process.env.AI_CACHE_TTL || '3600') * 1000
+interface CacheEntry {
+  data: AnalyzeApiResponse
+  timestamp: number
+}
+const analysisCache = new Map<string, CacheEntry>()
+const CACHE_TTL = parseInt(process.env.AI_CACHE_TTL ?? '3600') * 1000
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeApiResponse | ErrorApiResponse>> {
   try {
-    const body = await request.json()
+    const body = await request.json() as AnalyzeRequestBody
     
     // Validate request
     const validatedData = AnalyzeRequestSchema.parse(body)
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: result.error || 'Analysis failed' 
+          error: result.error ?? 'Analysis failed' 
         },
         { status: 400 }
       )
@@ -77,12 +83,12 @@ export async function POST(request: NextRequest) {
     const confidenceScores = calculateConfidenceScore(result.analysis)
     
     // Prepare response
-    const response = {
+    const response: AnalyzeApiResponse = {
       success: true,
       analysis: result.analysis,
       confidenceScores,
       processingTime: result.processingTime,
-      sessionId: sessionId || generateSessionId(),
+      sessionId: sessionId ?? generateSessionId(),
       timestamp: new Date().toISOString()
     }
 
@@ -116,8 +122,9 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint for testing
-export async function GET() {
+export function GET(): NextResponse<ServiceStatusResponse> {
   return NextResponse.json({
+    success: true,
     status: 'ready',
     service: 'AI Product Analysis',
     version: '1.0.0',
@@ -143,7 +150,7 @@ function generateSessionId(): string {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 }
 
-function checkCache(key: string): any {
+function checkCache(key: string): AnalyzeApiResponse | null {
   const cached = analysisCache.get(key)
   if (!cached) return null
   
@@ -158,7 +165,7 @@ function checkCache(key: string): any {
   return data
 }
 
-function cacheResult(key: string, data: any): void {
+function cacheResult(key: string, data: AnalyzeApiResponse): void {
   analysisCache.set(key, {
     data,
     timestamp: Date.now()

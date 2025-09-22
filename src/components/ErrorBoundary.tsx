@@ -1,7 +1,8 @@
 "use client"
 
-import React from 'react'
 import { AlertCircle } from 'lucide-react'
+import React from 'react'
+
 import { Button } from '@/components/ui/button'
 
 interface ErrorBoundaryState {
@@ -22,11 +23,11 @@ export class ErrorBoundary extends React.Component<
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('Error caught by boundary:', error, errorInfo)
   }
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
@@ -34,7 +35,7 @@ export class ErrorBoundary extends React.Component<
             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
             <p className="text-muted-foreground mb-6">
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {this.state.error?.message ?? 'An unexpected error occurred'}
             </p>
             <Button
               onClick={() => {

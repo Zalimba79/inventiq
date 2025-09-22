@@ -1,12 +1,5 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { useProductStore } from '@/store/product-store'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { 
   ArrowLeft, 
   Trash2, 
@@ -19,11 +12,20 @@ import {
   Plus,
   Minus
 } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { useToast } from '@/hooks/use-toast'
+import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
-export default function ProductDetailPage() {
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+import { useProductStore } from '@/store/product-store'
+
+export default function ProductDetailPage(): JSX.Element | null {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -49,8 +51,8 @@ export default function ProductDetailPage() {
     if (mounted) {
       const product = getProduct(productId)
       if (product) {
-        setQuantity(product.quantity || 1)
-        setName(product.name || '')
+        setQuantity(product.quantity ?? 1)
+        setName(product.name ?? '')
       } else {
         // Product not found, redirect to draft
         router.push('/products/draft')
@@ -72,10 +74,10 @@ export default function ProductDetailPage() {
     return null
   }
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     updateProduct(productId, {
       quantity,
-      name: name || undefined
+      name: name ?? undefined
     })
     
     toast({
@@ -89,7 +91,7 @@ export default function ProductDetailPage() {
     }, 500)
   }
 
-  const handleDeletePhoto = (photoId: string) => {
+  const handleDeletePhoto = (photoId: string): void => {
     if (product.photos.length <= 1) {
       toast({
         title: "Cannot delete",
@@ -99,7 +101,7 @@ export default function ProductDetailPage() {
       return
     }
     
-    removePhotoFromProduct(productId, photoId)
+    void removePhotoFromProduct(productId, photoId)
     
     toast({
       title: "Photo removed",
@@ -107,7 +109,7 @@ export default function ProductDetailPage() {
     })
   }
 
-  const handleSetPrimary = (photoId: string) => {
+  const handleSetPrimary = (photoId: string): void => {
     setPrimaryPhoto(productId, photoId)
     
     toast({
@@ -116,7 +118,7 @@ export default function ProductDetailPage() {
     })
   }
 
-  const primaryPhoto = product.photos.find(p => p.isPrimary) || product.photos[0]
+  const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -131,7 +133,7 @@ export default function ProductDetailPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">
-              {product.name || `Product ${product.id.slice(-6)}`}
+              {product.name ?? `Product ${product.id.slice(-6)}`}
             </h1>
             <p className="text-sm text-muted-foreground">
               Edit product details and organize photos
@@ -161,8 +163,9 @@ export default function ProductDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Product Name</label>
+                <label htmlFor="product-name-input" className="text-sm font-medium mb-2 block">Product Name</label>
                 <Input
+                  id="product-name-input"
                   placeholder="Enter product name..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -170,7 +173,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <label htmlFor="quantity-input" className="text-sm font-medium mb-2 block flex items-center gap-2">
                   <Hash className="w-4 h-4" />
                   Quantity
                 </label>
@@ -183,9 +186,10 @@ export default function ProductDetailPage() {
                     <Minus className="w-4 h-4" />
                   </Button>
                   <Input
+                    id="quantity-input"
                     type="number"
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) ?? 1))}
                     className="w-20 text-center"
                     min="1"
                   />
@@ -200,7 +204,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
+                <div className="text-sm font-medium mb-2 block">Status</div>
                 <Badge variant="secondary">
                   <Package className="w-3 h-3 mr-1" />
                   {product.status}
@@ -227,7 +231,7 @@ export default function ProductDetailPage() {
                 {primaryPhoto && (
                   <img
                     src={primaryPhoto.dataUrl}
-                    alt="Primary product photo"
+                    alt="Primary product"
                     className="w-full h-full object-contain"
                   />
                 )}
@@ -261,12 +265,23 @@ export default function ProductDetailPage() {
                       : "border-transparent hover:border-gray-300"
                   )}
                   onClick={() => setSelectedPhotoId(photo.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setSelectedPhotoId(photo.id)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select photo ${index + 1}`}
                 >
-                  <div className="aspect-square bg-muted">
-                    <img
-                      src={photo.dataUrl}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover"
+                  <div className="aspect-square bg-muted relative">
+                    <Image
+                      src={photo.dataUrl ?? ''}
+                      alt={`Product view ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
                     />
                   </div>
                   

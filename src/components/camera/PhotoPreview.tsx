@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useState } from 'react'
-import { CapturedPhoto } from '@/types/capture'
+import { X, ZoomIn } from 'lucide-react'
+import Image from 'next/image'
+import React, { useState, useCallback, memo } from 'react'
+
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -9,9 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { X, ZoomIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCaptureStore } from '@/store/capture-store'
+import { type CapturedPhoto } from '@/types/capture'
+// Removed unused capture-store import
 
 interface PhotoPreviewProps {
   photos: CapturedPhoto[]
@@ -21,23 +23,23 @@ interface PhotoPreviewProps {
   onRemove?: (photoId: string) => void
 }
 
-export function PhotoPreview({
+export const PhotoPreview = memo(({
   photos,
   maxVisible = 5,
   size = 'md',
   className,
   onRemove
-}: PhotoPreviewProps) {
+}: PhotoPreviewProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<CapturedPhoto | null>(null)
-  const { removePhoto } = useCaptureStore()
+  // const { removePhoto } = useCaptureStore() - removed unused
   
   const visiblePhotos = photos.slice(-maxVisible)
   const hiddenCount = Math.max(0, photos.length - maxVisible)
 
-  const handleRemove = (photoId: string) => {
-    removePhoto(photoId)
+  const handleRemove = useCallback((photoId: string) => {
+    // removePhoto(photoId) - removed unused
     onRemove?.(photoId)
-  }
+  }, [onRemove])
 
   const sizeClasses = {
     sm: 'w-16 h-16',
@@ -58,18 +60,22 @@ export function PhotoPreview({
         )}
         
         {visiblePhotos.map((photo) => (
-          <div
+          <button
             key={photo.id}
             className={cn(
               sizeClasses[size],
-              "relative group rounded-lg overflow-hidden cursor-pointer"
+              "relative group rounded-lg overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
             )}
             onClick={() => setSelectedPhoto(photo)}
+            type="button"
+            aria-label={`View photo ${photo.id}`}
           >
-            <img
+            <Image
               src={photo.dataUrl}
               alt={photo.fileName}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 25vw, 12.5vw"
             />
             
             {/* Hover overlay */}
@@ -91,7 +97,7 @@ export function PhotoPreview({
                 <X className="w-3 h-3" />
               </Button>
             )}
-          </div>
+          </button>
         ))}
       </div>
 
@@ -103,11 +109,16 @@ export function PhotoPreview({
           </DialogHeader>
           {selectedPhoto && (
             <div className="relative">
-              <img
-                src={selectedPhoto.dataUrl}
-                alt={selectedPhoto.fileName}
-                className="w-full h-auto rounded-lg"
-              />
+              <div className="relative w-full h-auto max-h-[70vh]">
+                <Image
+                  src={selectedPhoto.dataUrl}
+                  alt={selectedPhoto.fileName}
+                  width={800}
+                  height={600}
+                  className="w-full h-auto rounded-lg"
+                  style={{ objectFit: 'contain' }}
+                />
+              </div>
               <div className="mt-4 text-sm text-muted-foreground">
                 <p>Size: {(selectedPhoto.size / 1024).toFixed(2)} KB</p>
                 <p>Captured: {new Date(selectedPhoto.timestamp).toLocaleString()}</p>
@@ -118,4 +129,4 @@ export function PhotoPreview({
       </Dialog>
     </>
   )
-}
+})

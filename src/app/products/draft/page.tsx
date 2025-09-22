@@ -1,11 +1,5 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useProductStore } from '@/store/product-store'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
 import { 
   Package, 
   Sparkles, 
@@ -13,22 +7,29 @@ import {
   Camera,
   RefreshCw,
   Trash2,
-  Edit,
   Grid3x3,
-  List
+  List,
+  ZoomIn
 } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
 
-export default function DraftProductsPage() {
+import { ImageLightbox } from '@/components/products/ImageLightbox'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
+import { useProductStore } from '@/store/product-store'
+
+export default function DraftProductsPage(): JSX.Element {
   const router = useRouter()
   const {
-    products,
     selectedProductIds,
     selectProduct,
     deselectProduct,
-    selectAllProducts,
     deselectAllProducts,
     deleteProduct,
     queueProductsForAnalysis,
@@ -39,6 +40,7 @@ export default function DraftProductsPage() {
 
   const [mounted, setMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [lightboxImage, setLightboxImage] = useState<{ src: string, alt: string } | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -54,7 +56,7 @@ export default function DraftProductsPage() {
 
   const draftProducts = getProductsByStatus('DRAFT')
 
-  const handleCheckboxChange = (productId: string, checked: boolean) => {
+  const handleCheckboxChange = (productId: string, checked: boolean): void => {
     if (checked) {
       selectProduct(productId)
     } else {
@@ -62,7 +64,7 @@ export default function DraftProductsPage() {
     }
   }
 
-  const handleSelectAll = () => {
+  const handleSelectAll = (): void => {
     if (selectedProductIds.size === draftProducts.length) {
       deselectAllProducts()
     } else {
@@ -70,7 +72,7 @@ export default function DraftProductsPage() {
     }
   }
 
-  const handleAnalyzeSelected = async () => {
+  const handleAnalyzeSelected = async (): Promise<void> => {
     const selectedIds = Array.from(selectedProductIds).filter(id => 
       draftProducts.some(p => p.id === id)
     )
@@ -84,23 +86,23 @@ export default function DraftProductsPage() {
     router.push('/products/validation')
   }
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = (): void => {
     const selectedIds = Array.from(selectedProductIds)
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${selectedIds.length} product${selectedIds.length > 1 ? 's' : ''}? This will also delete all associated photos.`
     )
     if (confirmDelete) {
-      selectedIds.forEach(id => deleteProduct(id))
+      selectedIds.forEach(id => void deleteProduct(id))
       deselectAllProducts()
     }
   }
 
-  const handleDeleteSingle = (productId: string) => {
+  const handleDeleteSingle = (productId: string): void => {
     const confirmDelete = window.confirm(
       'Are you sure you want to delete this product and all its photos? This action cannot be undone.'
     )
     if (confirmDelete) {
-      deleteProduct(productId)
+      void deleteProduct(productId)
       deselectProduct(productId)
     }
   }
@@ -164,7 +166,7 @@ export default function DraftProductsPage() {
               </Button>
             )}
             <Button
-              onClick={handleAnalyzeSelected}
+              onClick={() => { void handleAnalyzeSelected() }}
               disabled={selectedProductIds.size === 0 || isAnalyzing}
               className="gap-2"
             >
@@ -201,7 +203,7 @@ export default function DraftProductsPage() {
         )}>
           {draftProducts.map((product) => {
             const isSelected = selectedProductIds.has(product.id)
-            const primaryPhoto = product.photos.find(p => p.isPrimary) || product.photos[0]
+            const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
             
             return (
               <Card 
@@ -233,30 +235,69 @@ export default function DraftProductsPage() {
                 {viewMode === 'grid' ? (
                   <CardContent className="p-3">
                     {/* Product Image */}
-                    <div 
-                      className="aspect-square bg-muted rounded-md mb-2 overflow-hidden cursor-pointer"
-                      onClick={() => router.push(`/products/${product.id}`)}
-                    >
-                      {primaryPhoto && (
-                        <img
-                          src={primaryPhoto.dataUrl}
-                          alt="Product"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
+                    <div className="aspect-square bg-muted rounded-md mb-2 overflow-hidden relative group">
+                      <div 
+                        className="w-full h-full cursor-pointer relative"
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (primaryPhoto?.dataUrl) {
+                            setLightboxImage({
+                              src: primaryPhoto.dataUrl,
+                              alt: product.name ?? 'Product'
+                            })
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            if (primaryPhoto?.dataUrl) {
+                              setLightboxImage({
+                                src: primaryPhoto.dataUrl,
+                                alt: product.name ?? 'Product'
+                              })
+                            }
+                          }
+                        }}
+                      >
+                        {primaryPhoto?.dataUrl && (
+                          <>
+                            <Image
+                              src={primaryPhoto.dataUrl}
+                              alt="Product"
+                              fill
+                              className="object-cover transition-transform duration-200 group-hover:scale-105"
+                              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+                              <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {/* Product Info */}
                     <div 
                       className="space-y-1 cursor-pointer"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => router.push(`/products/${product.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          router.push(`/products/${product.id}`)
+                        }
+                      }}
                     >
                       <h3 className="font-medium text-sm hover:text-primary transition-colors">
-                        {product.name || `Product ${product.id.slice(-6)}`}
+                        {product.name ?? `Product ${product.id.slice(-6)}`}
                       </h3>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{product.photos.length} photos</span>
-                        <span>Qty: {product.quantity || 1}</span>
+                        <span>Qty: {product.quantity ?? 1}</span>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(product.createdAt).toLocaleDateString()}
@@ -283,7 +324,7 @@ export default function DraftProductsPage() {
                         onClick={(e) => {
                           e.stopPropagation()
                           queueProductsForAnalysis([product.id])
-                          processAnalysisQueue().then(() => {
+                          void processAnalysisQueue().then(() => {
                             router.push('/products/validation')
                           })
                         }}
@@ -296,27 +337,67 @@ export default function DraftProductsPage() {
                   // List View
                   <CardContent className="p-3 flex gap-3 flex-1">
                     {/* Thumbnail */}
-                    <div className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                      {primaryPhoto && (
-                        <img
-                          src={primaryPhoto.dataUrl}
-                          alt="Product"
-                          className="w-full h-full object-cover"
-                        />
+                    <div 
+                      className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0 cursor-pointer group relative"
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (primaryPhoto?.dataUrl) {
+                          setLightboxImage({
+                            src: primaryPhoto.dataUrl,
+                            alt: product.name ?? 'Product'
+                          })
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          if (primaryPhoto?.dataUrl) {
+                            setLightboxImage({
+                              src: primaryPhoto.dataUrl,
+                              alt: product.name ?? 'Product'
+                            })
+                          }
+                        }
+                      }}
+                    >
+                      {primaryPhoto?.dataUrl && (
+                        <>
+                          <Image
+                            src={primaryPhoto.dataUrl}
+                            alt="Product"
+                            width={80}
+                            height={80}
+                            className="object-cover transition-transform duration-200 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+                            <ZoomIn className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                          </div>
+                        </>
                       )}
                     </div>
 
                     {/* Info */}
                     <div 
                       className="flex-1 min-w-0 cursor-pointer"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => router.push(`/products/${product.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          router.push(`/products/${product.id}`)
+                        }
+                      }}
                     >
                       <h3 className="font-medium hover:text-primary transition-colors">
-                        {product.name || `Product ${product.id.slice(-6)}`}
+                        {product.name ?? `Product ${product.id.slice(-6)}`}
                       </h3>
                       <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                         <span>{product.photos.length} photos</span>
-                        <span>Qty: {product.quantity || 1}</span>
+                        <span>Qty: {product.quantity ?? 1}</span>
                         <span>Created {new Date(product.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -341,7 +422,7 @@ export default function DraftProductsPage() {
                         onClick={(e) => {
                           e.stopPropagation()
                           queueProductsForAnalysis([product.id])
-                          processAnalysisQueue().then(() => {
+                          void processAnalysisQueue().then(() => {
                             router.push('/products/validation')
                           })
                         }}
@@ -356,6 +437,16 @@ export default function DraftProductsPage() {
             )
           })}
         </div>
+      )}
+      
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <ImageLightbox
+          isOpen={!!lightboxImage}
+          onClose={() => setLightboxImage(null)}
+          imageSrc={lightboxImage.src}
+          imageAlt={lightboxImage.alt}
+        />
       )}
     </div>
   )

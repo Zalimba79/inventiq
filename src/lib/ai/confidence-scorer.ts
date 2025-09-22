@@ -1,4 +1,33 @@
-import { ProductAnalysis, ConfidenceScore } from '@/types/ai'
+import { type ProductAnalysis, type ConfidenceScore } from '@/types/ai'
+
+// Helper functions to reduce complexity
+function calculateNameScore(name: string | undefined): number {
+  if (!name) return 0
+  const nameWords = name.split(' ').length
+  return Math.min(1, (nameWords >= 2 ? 0.7 : 0.4) + (name.length > 10 ? 0.3 : 0))
+}
+
+function calculateCategoryScore(category: string | undefined, subcategory: string | undefined): number {
+  if (!category) return 0
+  return subcategory ? 0.9 : 0.7
+}
+
+function calculateBrandScore(brand: string | undefined): number {
+  if (!brand) return 0
+  return isKnownBrand(brand) ? 0.95 : 0.6
+}
+
+function calculateFeaturesScore(features: string[] | undefined): number {
+  const featureCount = features?.length ?? 0
+  return Math.min(1, featureCount * 0.15)
+}
+
+function calculateValueScore(estimatedValue: { min?: number; max?: number } | undefined): number {
+  if (!estimatedValue?.min || !estimatedValue?.max) return 0
+  const range = estimatedValue.max - estimatedValue.min
+  const percentage = range / estimatedValue.max
+  return percentage < 0.3 ? 0.8 : percentage < 0.5 ? 0.6 : 0.4
+}
 
 /**
  * Calculate detailed confidence scores for different aspects of the product analysis
@@ -6,38 +35,11 @@ import { ProductAnalysis, ConfidenceScore } from '@/types/ai'
 export function calculateConfidenceScore(analysis: ProductAnalysis): ConfidenceScore {
   const scores: ConfidenceScore = {
     overall: analysis.confidence,
-    name: 0,
-    category: 0,
-    brand: 0,
-    features: 0,
-    value: 0
-  }
-
-  // Name confidence based on specificity and length
-  if (analysis.name) {
-    const nameWords = analysis.name.split(' ').length
-    scores.name = Math.min(1, (nameWords >= 2 ? 0.7 : 0.4) + (analysis.name.length > 10 ? 0.3 : 0))
-  }
-
-  // Category confidence based on presence of subcategory
-  if (analysis.category) {
-    scores.category = analysis.subcategory ? 0.9 : 0.7
-  }
-
-  // Brand confidence
-  if (analysis.brand) {
-    scores.brand = isKnownBrand(analysis.brand) ? 0.95 : 0.6
-  }
-
-  // Features confidence based on count and detail
-  const featureCount = analysis.features?.length || 0
-  scores.features = Math.min(1, featureCount * 0.15)
-
-  // Value confidence based on range
-  if (analysis.estimatedValue?.min && analysis.estimatedValue?.max) {
-    const range = analysis.estimatedValue.max - analysis.estimatedValue.min
-    const percentage = range / analysis.estimatedValue.max
-    scores.value = percentage < 0.3 ? 0.8 : percentage < 0.5 ? 0.6 : 0.4
+    name: calculateNameScore(analysis.name),
+    category: calculateCategoryScore(analysis.category, analysis.subcategory),
+    brand: calculateBrandScore(analysis.brand),
+    features: calculateFeaturesScore(analysis.features),
+    value: calculateValueScore(analysis.estimatedValue)
   }
 
   // Recalculate overall as weighted average
@@ -49,9 +51,7 @@ export function calculateConfidenceScore(analysis: ProductAnalysis): ConfidenceS
     value: 0.1
   }
 
-  scores.overall = Object.entries(weights).reduce((sum, [key, weight]) => {
-    return sum + (scores[key as keyof typeof weights] * weight)
-  }, 0)
+  scores.overall = Object.entries(weights).reduce((sum, [key, weight]) => sum + (scores[key as keyof typeof weights] * weight), 0)
 
   return scores
 }

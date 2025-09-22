@@ -1,0 +1,538 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true,
+    "jest": true,
+    "webextensions": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
+      }
+    },
+    "import/extensions": [".js", ".jsx", ".ts", ".tsx"],
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    }
+  },
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
+    "@typescript-eslint/recommended-requiring-type-checking",
+    "next/core-web-vitals",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "jsx-a11y",
+    "import",
+    "prefer-arrow",
+    "unicorn",
+    "security",
+    "sonarjs",
+    "promise"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    // TypeScript-specific rules for enhanced type safety
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "error",
+    "@typescript-eslint/prefer-optional-chain": "error",
+    "@typescript-eslint/no-unnecessary-type-assertion": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-misused-promises": [
+      "error",
+      {
+        "checksVoidReturn": false
+      }
+    ],
+    "@typescript-eslint/require-await": "error",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "warn",
+    "@typescript-eslint/no-unsafe-return": "warn",
+    "@typescript-eslint/restrict-template-expressions": "warn",
+    "@typescript-eslint/prefer-as-const": "error",
+    "@typescript-eslint/ban-ts-comment": [
+      "error",
+      {
+        "ts-expect-error": "allow-with-description",
+        "ts-ignore": "allow-with-description",
+        "ts-nocheck": false,
+        "ts-check": false
+      }
+    ],
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports",
+        "fixStyle": "inline-type-imports"
+      }
+    ],
+    "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
+    "@typescript-eslint/array-type": ["error", { "default": "array-simple" }],
+    "@typescript-eslint/prefer-function-type": "error",
+    "@typescript-eslint/no-redundant-type-constituents": "error",
+    "@typescript-eslint/prefer-reduce-type-parameter": "error",
+    "@typescript-eslint/prefer-return-this-type": "error",
+
+    // React-specific rules for component best practices and performance
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/display-name": "warn",
+    "react/jsx-key": [
+      "error",
+      {
+        "checkFragmentShorthand": true,
+        "checkKeyMustBeforeSpread": true,
+        "warnOnDuplicates": true
+      }
+    ],
+    "react/jsx-no-useless-fragment": "warn",
+    "react/jsx-curly-brace-presence": [
+      "warn",
+      {
+        "props": "never",
+        "children": "never"
+      }
+    ],
+    "react/self-closing-comp": "warn",
+    "react/jsx-boolean-value": ["warn", "never"],
+    "react/no-array-index-key": "warn",
+    "react/no-unstable-nested-components": "error",
+    "react/jsx-no-leaked-render": "error",
+    "react/jsx-fragments": ["warn", "syntax"],
+    "react/no-danger": "warn",
+    "react/no-deprecated": "error",
+    "react/jsx-no-bind": [
+      "warn",
+      {
+        "allowArrowFunctions": true,
+        "allowBind": false,
+        "allowFunctions": false
+      }
+    ],
+    "react/function-component-definition": [
+      "error",
+      {
+        "namedComponents": "arrow-function",
+        "unnamedComponents": "arrow-function"
+      }
+    ],
+
+    // React Hooks rules for proper state management and performance
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+
+    // Accessibility rules for inclusive design (critical for camera UI)
+    "jsx-a11y/alt-text": [
+      "error",
+      {
+        "elements": ["img", "object", "area", "input[type=\"image\"]"],
+        "img": ["Image"],
+        "object": ["Object"],
+        "area": ["Area"],
+        "input[type=\"image\"]": ["InputImage"]
+      }
+    ],
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/aria-proptypes": "error",
+    "jsx-a11y/aria-unsupported-elements": "error",
+    "jsx-a11y/role-has-required-aria-props": "error",
+    "jsx-a11y/role-supports-aria-props": "error",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/anchor-is-valid": [
+      "error",
+      {
+        "components": ["Link"],
+        "specialLink": ["hrefLeft", "hrefRight"],
+        "aspects": ["invalidHref", "preferButton"]
+      }
+    ],
+    "jsx-a11y/media-has-caption": [
+      "warn",
+      {
+        "audio": ["Audio"],
+        "video": ["Video"],
+        "track": ["Track"]
+      }
+    ],
+    "jsx-a11y/no-autofocus": ["error", { "ignoreNonDOM": true }],
+
+    // Import organization for better code structure
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "object",
+          "type"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "next/**",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@/**",
+            "group": "internal",
+            "position": "before"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react", "next"],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
+    "import/no-unresolved": "error",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "import/no-useless-path-segments": "error",
+    "import/newline-after-import": "error",
+    "import/no-duplicates": "error",
+    "import/first": "error",
+    "import/exports-last": "error",
+    "import/no-namespace": "warn",
+    "import/prefer-default-export": "off",
+    "import/no-default-export": ["error", { "allowHookDeclaration": true }],
+
+    // Performance optimization rules
+    "prefer-arrow/prefer-arrow-functions": [
+      "warn",
+      {
+        "disallowPrototype": true,
+        "singleReturnOnly": false,
+        "classPropertiesAllowed": false
+      }
+    ],
+    "no-nested-ternary": "warn",
+    "no-unneeded-ternary": "error",
+    "prefer-template": "error",
+    "prefer-destructuring": [
+      "warn",
+      {
+        "array": false,
+        "object": true
+      }
+    ],
+
+    // SonarJS rules for code quality and cognitive complexity
+    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/no-duplicate-string": ["error", 5],
+    "sonarjs/no-identical-expressions": "error",
+    "sonarjs/no-identical-functions": "error",
+    "sonarjs/no-redundant-boolean": "error",
+    "sonarjs/no-unused-collection": "error",
+    "sonarjs/prefer-immediate-return": "error",
+    "sonarjs/prefer-object-literal": "error",
+    "sonarjs/prefer-single-boolean-return": "error",
+
+    // Promise handling rules (critical for async camera/AI operations)
+    "promise/always-return": "error",
+    "promise/no-return-wrap": "error",
+    "promise/param-names": "error",
+    "promise/catch-or-return": "error",
+    "promise/no-native": "off",
+    "promise/no-nesting": "warn",
+    "promise/no-promise-in-callback": "warn",
+    "promise/no-callback-in-promise": "warn",
+    "promise/avoid-new": "warn",
+    "promise/no-new-statics": "error",
+    "promise/no-return-in-finally": "warn",
+    "promise/valid-params": "warn",
+
+    // Security rules for web application safety
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-unsafe-regex": "error",
+    "security/detect-buffer-noassert": "error",
+    "security/detect-child-process": "warn",
+    "security/detect-disable-mustache-escape": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-no-csrf-before-method-override": "error",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-pseudoRandomBytes": "error",
+
+    // Unicorn rules for modern JavaScript best practices
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-module": "error",
+    "unicorn/prefer-ternary": "warn",
+    "unicorn/no-array-for-each": "warn",
+    "unicorn/no-lonely-if": "error",
+    "unicorn/prefer-includes": "error",
+    "unicorn/prefer-string-starts-ends-with": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/prefer-array-find": "error",
+    "unicorn/prefer-default-parameters": "error",
+    "unicorn/prefer-number-properties": "error",
+    "unicorn/prefer-optional-catch-binding": "error",
+    "unicorn/explicit-length-check": "error",
+    "unicorn/better-regex": "error",
+    "unicorn/no-useless-undefined": "error",
+    "unicorn/prefer-at": "error",
+    "unicorn/prefer-spread": "error",
+    "unicorn/throw-new-error": "error",
+
+    // Code quality and consistency rules
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-alert": "warn",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "curly": ["error", "all"],
+    "brace-style": ["error", "1tbs", { "allowSingleLine": false }],
+    "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0 }],
+    "no-trailing-spaces": "error",
+    "eol-last": ["error", "always"],
+    "comma-dangle": ["error", "never"],
+    "semi": ["error", "never"],
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+
+    // Error prevention rules
+    "no-unreachable": "error",
+    "no-unreachable-loop": "error",
+    "no-constant-condition": "error",
+    "no-duplicate-case": "error",
+    "no-empty": "error",
+    "no-extra-boolean-cast": "error",
+    "no-sparse-arrays": "error",
+    "use-isnan": "error",
+    "valid-typeof": "error",
+    "no-undef": "error",
+    "no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true,
+        "allowTernary": true,
+        "allowTaggedTemplates": true
+      }
+    ],
+
+    // WebRTC/Camera/MediaDevices specific rules
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "navigator",
+        "message": "Use feature detection and error handling when accessing navigator APIs for camera functionality"
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.object.name='navigator'][callee.property.name='getUserMedia']",
+        "message": "Use navigator.mediaDevices.getUserMedia() instead of deprecated navigator.getUserMedia()"
+      },
+      {
+        "selector": "CallExpression[callee.name='localStorage'][arguments.length=0]",
+        "message": "Direct localStorage access should be wrapped in try-catch for quota handling"
+      }
+    ],
+
+    // AI/Async operation handling (important for OpenAI API calls)
+    "no-async-promise-executor": "error",
+    "no-promise-executor-return": "error",
+    "prefer-promise-reject-errors": "error",
+
+    // State management rules (Zustand specific considerations)
+    "no-param-reassign": ["error", { "props": false }],
+
+    // Bundle size and performance considerations
+    "import/no-default-export": "off", // Next.js pages need default exports
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["lodash/*"],
+            "message": "Use individual lodash functions or native alternatives to reduce bundle size"
+          },
+          {
+            "group": ["moment"],
+            "message": "Use date-fns or native Date API instead of moment.js for better bundle size"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/__tests__/**/*"],
+      "env": {
+        "jest": true
+      },
+      "extends": ["plugin:testing-library/react", "plugin:jest/recommended"],
+      "plugins": ["testing-library", "jest"],
+      "rules": {
+        // Testing-specific rule adjustments
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "no-console": "off",
+        "sonarjs/no-duplicate-string": "off",
+        
+        // Testing Library best practices
+        "testing-library/await-async-query": "error",
+        "testing-library/no-await-sync-query": "error",
+        "testing-library/no-debugging-utils": "warn",
+        "testing-library/no-dom-import": "error",
+        "testing-library/prefer-screen-queries": "error",
+        "testing-library/render-result-naming-convention": "error",
+        "testing-library/no-unnecessary-act": "error",
+        "testing-library/prefer-user-event": "error",
+        
+        // Jest best practices
+        "jest/consistent-test-it": ["error", { "fn": "test" }],
+        "jest/expect-expect": "error",
+        "jest/no-disabled-tests": "warn",
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        "jest/prefer-to-be": "error",
+        "jest/prefer-to-have-length": "error",
+        "jest/valid-expect": "error",
+        "jest/no-deprecated-functions": "error"
+      }
+    },
+    {
+      "files": ["**/*.config.{js,ts}", "next.config.js", "tailwind.config.{js,ts}"],
+      "env": {
+        "node": true
+      },
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-console": "off",
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["src/app/**/*.{ts,tsx}"],
+      "rules": {
+        // Next.js App Router specific rules
+        "import/no-default-export": "off",
+        "react/display-name": "off",
+        "react/function-component-definition": "off"
+      }
+    },
+    {
+      "files": ["src/pages/**/*.{ts,tsx}"],
+      "rules": {
+        // Next.js Pages Router specific rules
+        "import/no-default-export": "off",
+        "react/display-name": "off",
+        "react/function-component-definition": "off"
+      }
+    },
+    {
+      "files": ["**/*.d.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off",
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["src/store/**/*.{ts,tsx}"],
+      "rules": {
+        // Zustand store specific adjustments
+        "@typescript-eslint/no-explicit-any": "warn",
+        "prefer-arrow/prefer-arrow-functions": "off",
+        "no-param-reassign": "off"
+      }
+    },
+    {
+      "files": ["src/components/ui/**/*.{ts,tsx}"],
+      "rules": {
+        // shadcn/ui components often use forwardRef patterns
+        "react/display-name": "off",
+        "@typescript-eslint/no-empty-interface": "off",
+        "react/function-component-definition": "off"
+      }
+    },
+    {
+      "files": ["src/components/camera/**/*.{ts,tsx}"],
+      "rules": {
+        // Camera components may need special handling for WebRTC APIs
+        "no-console": "warn", // Allow more logging for camera debugging
+        "@typescript-eslint/no-explicit-any": "warn", // ImageCapture API types may not be complete
+        "promise/catch-or-return": "warn" // Camera streams need careful cleanup
+      }
+    },
+    {
+      "files": ["src/lib/**/*.{ts,tsx}"],
+      "rules": {
+        // Utility libraries may need more flexibility
+        "@typescript-eslint/no-explicit-any": "warn",
+        "no-console": "warn"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "dist/",
+    "build/",
+    "coverage/",
+    "*.min.js",
+    "public/",
+    ".env*",
+    "next-env.d.ts",
+    "prisma/migrations/"
+  ]
+}

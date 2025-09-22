@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
-import { ProductAnalysis, ProductAnalysisSchema, AIAnalysisResult } from '@/types/ai'
+
+import { type ProductAnalysis, ProductAnalysisSchema, type AIAnalysisResult } from '@/types/ai'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -96,7 +97,7 @@ export async function analyzeProductWithGPT4Vision(
     }
 
     // Parse and validate the response
-    const rawAnalysis = JSON.parse(content)
+    const rawAnalysis = JSON.parse(content) as unknown
     const analysis = ProductAnalysisSchema.parse(rawAnalysis)
 
     return {
@@ -135,7 +136,7 @@ export async function analyzeMultipleImages(
 
     // For multiple images, analyze each and combine results
     const analyses = await Promise.all(
-      imageDataUrls.map(url => analyzeProductWithGPT4Vision(url))
+      imageDataUrls.map(async url => analyzeProductWithGPT4Vision(url))
     )
 
     const successfulAnalyses = analyses
@@ -148,9 +149,12 @@ export async function analyzeMultipleImages(
 
     if (!combineResults) {
       // Return the most confident analysis
-      const bestAnalysis = successfulAnalyses.reduce((best, current) => 
-        current.confidence > best.confidence ? current : best
-      )
+      let bestAnalysis = successfulAnalyses[0]
+      for (const analysis of successfulAnalyses) {
+        if (analysis.confidence > bestAnalysis.confidence) {
+          bestAnalysis = analysis
+        }
+      }
       
       return {
         success: true,
@@ -186,18 +190,21 @@ function combineAnalysisResults(analyses: ProductAnalysis[]): ProductAnalysis {
   const categories = analyses.map(a => ({ value: a.category, confidence: a.confidence }))
   
   // Get the highest confidence name
-  const bestName = names.reduce((best, current) => 
-    current.confidence > best.confidence ? current : best
-  )
+  let bestName = names[0]
+  for (const name of names) {
+    if (name.confidence > bestName.confidence) {
+      bestName = name
+    }
+  }
 
   // Combine all features and remove duplicates
-  const allFeatures = [...new Set(analyses.flatMap(a => a.features))]
+  const allFeatures = Array.from(new Set(analyses.flatMap(a => a.features)))
   
   // Combine all tags
-  const allTags = [...new Set(analyses.flatMap(a => a.tags || []))]
+  const allTags = Array.from(new Set(analyses.flatMap(a => a.tags ?? [])))
   
   // Combine colors
-  const allColors = [...new Set(analyses.flatMap(a => a.colors || []))]
+  const allColors = Array.from(new Set(analyses.flatMap(a => a.colors ?? [])))
   
   // Average confidence
   const avgConfidence = analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length

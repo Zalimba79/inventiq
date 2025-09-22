@@ -2,8 +2,9 @@
 
 ## Aktueller Status
 - **Projekt**: Inventiq - AI-Powered Inventory Management
+- **GitHub**: https://github.com/Zalimba79/inventiq
 - **Stack**: Next.js 14, TypeScript, Tailwind, Zustand
-- **Letzte Aktivität**: Setup und Konfiguration
+- **Letzte Aktivität**: Camera-Settings und Grid-Overlay optimiert
 
 ## Implementierte Features
 ✅ Multi-page Architecture mit App Router

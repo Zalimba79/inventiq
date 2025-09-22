@@ -1,28 +1,186 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useProductStore, Product } from '@/store/product-store'
 import { 
   CheckCircle,
   XCircle,
   Package,
-  TrendingUp,
-  AlertTriangle,
-  ChevronRight,
-  CheckCheck,
-  X
+  CheckCheck
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Image from 'next/image'
+import React, { useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+import { useProductStore, type Product } from '@/store/product-store'
 
 interface BulkProductValidationProps {
   productIds: string[]
   onComplete?: () => void
   className?: string
+}
+
+// Action buttons component
+function ProductActions({ 
+  isValidated, 
+  isRejected, 
+  isProcessed, 
+  onValidate, 
+  onReject 
+}: {
+  isValidated: boolean
+  isRejected: boolean
+  isProcessed: boolean
+  onValidate: () => void
+  onReject: () => void
+}): React.ReactElement {
+  if (isValidated) {
+    return (
+      <Badge className="bg-green-500">
+        <CheckCircle className="w-3 h-3 mr-1" />
+        Validated
+      </Badge>
+    )
+  }
+  
+  if (isRejected) {
+    return (
+      <Badge variant="destructive">
+        <XCircle className="w-3 h-3 mr-1" />
+        Rejected
+      </Badge>
+    )
+  }
+  
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="default"
+        onClick={onValidate}
+        disabled={isProcessed}
+      >
+        <CheckCircle className="w-4 h-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onReject}
+        disabled={isProcessed}
+      >
+        <XCircle className="w-4 h-4" />
+      </Button>
+    </>
+  )
+}
+
+// Separate component to reduce complexity
+function ProductValidationCard({ 
+  product, 
+  isValidated, 
+  isRejected, 
+  isSelected,
+  isProcessed,
+  onToggleSelect,
+  onValidate,
+  onReject 
+}: {
+  product: Product
+  isValidated: boolean
+  isRejected: boolean
+  isSelected: boolean
+  isProcessed: boolean
+  onToggleSelect: () => void
+  onValidate: () => void
+  onReject: () => void
+}): React.ReactElement {
+  const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
+  
+  return (
+    <Card className={cn(
+      "transition-all",
+      isProcessed && "opacity-50",
+      isSelected && !isProcessed && "ring-2 ring-primary"
+    )}>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-4">
+          {/* Checkbox */}
+          <div className="flex items-center pt-1">
+            <Checkbox
+              checked={isSelected || isProcessed}
+              disabled={isProcessed}
+              onCheckedChange={onToggleSelect}
+              aria-label={`Select ${product.name ?? 'product'}`}
+            />
+          </div>
+
+          {/* Thumbnail */}
+          {primaryPhoto && (
+            <div className="w-24 h-24 bg-muted rounded overflow-hidden flex-shrink-0 relative">
+              <Image
+                src={primaryPhoto.dataUrl ?? ''}
+                alt={product.name ?? 'Product'}
+                fill
+                className="object-cover"
+                sizes="96px"
+              />
+            </div>
+          )}
+
+          {/* Product Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-lg">
+              {product.name ?? `Product ${product.id.slice(-6)}`}
+            </h3>
+            
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {product.category && (
+                <Badge variant="outline">
+                  <Package className="w-3 h-3 mr-1" />
+                  {product.category}
+                </Badge>
+              )}
+              
+              {product.confidence && (
+                <Badge variant="secondary">
+                  {(product.confidence * 100).toFixed(0)}% confidence
+                </Badge>
+              )}
+              
+              {(product.estimatedMin ?? product.estimatedMax) && (
+                <span className="text-sm text-muted-foreground">
+                  ${product.estimatedMin ?? 0} - ${product.estimatedMax ?? 0}
+                </span>
+              )}
+            </div>
+
+            {product.features && product.features.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm text-muted-foreground">
+                  {product.features.slice(0, 3).join(' • ')}
+                  {product.features.length > 3 && ` • +${product.features.length - 3} more`}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            <ProductActions
+              isValidated={isValidated}
+              isRejected={isRejected}
+              isProcessed={isProcessed}
+              onValidate={onValidate}
+              onReject={onReject}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function BulkProductValidation({ productIds, onComplete, className }: BulkProductValidationProps) {
@@ -99,13 +257,6 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
     })
   }
 
-  const getConfidenceColor = (confidence?: number) => {
-    if (!confidence) return 'text-gray-500'
-    if (confidence >= 0.8) return 'text-green-600'
-    if (confidence >= 0.6) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   const remainingCount = productsToValidate.filter(
     p => !validatedIds.has(p.id) && !rejectedIds.has(p.id)
   ).length
@@ -173,142 +324,19 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
           const isRejected = rejectedIds.has(product.id)
           const isSelected = selectedIds.has(product.id)
           const isProcessed = isValidated || isRejected
-          const primaryPhoto = product.photos.find(p => p.isPrimary) || product.photos[0]
           
           return (
-            <Card 
+            <ProductValidationCard
               key={product.id}
-              className={cn(
-                "transition-all",
-                isProcessed && "opacity-50",
-                isSelected && !isProcessed && "ring-2 ring-primary"
-              )}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  {/* Selection checkbox */}
-                  {!isProcessed && (
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => handleToggleSelection(product.id)}
-                      className="mt-6"
-                    />
-                  )}
-
-                  {/* Product image */}
-                  <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                    {primaryPhoto && (
-                      <img
-                        src={primaryPhoto.dataUrl}
-                        alt={product.name || 'Product'}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-
-                  {/* Product info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {product.name || `Product ${product.id.slice(-6)}`}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {product.brand && `${product.brand} • `}
-                          {product.category || 'Uncategorized'}
-                        </p>
-                      </div>
-                      
-                      {isProcessed && (
-                        <Badge 
-                          variant={isValidated ? "default" : "destructive"}
-                          className="gap-1"
-                        >
-                          {isValidated ? (
-                            <>
-                              <CheckCircle className="w-3 h-3" />
-                              Validated
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-3 h-3" />
-                              Rejected
-                            </>
-                          )}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Features */}
-                    {product.features && product.features.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {product.features.slice(0, 3).map((feature, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                        {product.features.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{product.features.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Confidence and value */}
-                    <div className="flex items-center gap-6 mt-3">
-                      {product.confidence !== undefined && (
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                          <span className={cn("text-sm font-medium", getConfidenceColor(product.confidence))}>
-                            {(product.confidence * 100).toFixed(0)}% confidence
-                          </span>
-                        </div>
-                      )}
-                      
-                      {(product.estimatedMin || product.estimatedMax) && (
-                        <span className="text-sm text-muted-foreground">
-                          ${product.estimatedMin || 0} - ${product.estimatedMax || 0}
-                        </span>
-                      )}
-
-                      {product.photos.length > 1 && (
-                        <span className="text-sm text-muted-foreground">
-                          {product.photos.length} photos
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Low confidence warning */}
-                    {product.confidence && product.confidence < 0.7 && !isProcessed && (
-                      <div className="flex items-center gap-2 mt-2 text-yellow-600">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span className="text-xs">Low confidence - manual review recommended</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Individual actions */}
-                  {!isProcessed && (
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRejectSingle(product.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleValidateSingle(product.id)}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              product={product}
+              isValidated={isValidated}
+              isRejected={isRejected}
+              isSelected={isSelected}
+              isProcessed={isProcessed}
+              onToggleSelect={() => handleToggleSelection(product.id)}
+              onValidate={() => handleValidateSingle(product.id)}
+              onReject={() => handleRejectSingle(product.id)}
+            />
           )
         })}
       </div>

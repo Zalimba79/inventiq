@@ -1,8 +1,5 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useProductStore } from '@/store/product-store'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   Package, 
   Camera, 
@@ -12,9 +9,13 @@ import {
   TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
-import { ClearStorageButton } from '@/components/debug/ClearStorageButton'
+import { useState, useEffect } from 'react'
 
-export default function HomePage() {
+import { ClearStorageButton } from '@/components/debug/ClearStorageButton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useProductStore } from '@/store/product-store'
+
+export default function HomePage(): JSX.Element {
   const { products, getProductsByStatus } = useProductStore()
   const [mounted, setMounted] = useState(false)
 
@@ -35,10 +36,11 @@ export default function HomePage() {
   const validatedProducts = getProductsByStatus('VALIDATED')
   const confirmedProducts = getProductsByStatus('CONFIRMED')
 
-  const totalValue = confirmedProducts.reduce((sum, p) => {
-    const avg = ((p.estimatedMin || 0) + (p.estimatedMax || 0)) / 2
-    return sum + avg
-  }, 0)
+  let totalValue = 0
+  for (const p of confirmedProducts) {
+    const avg = ((p.estimatedMin ?? 0) + (p.estimatedMax ?? 0)) / 2
+    totalValue += avg
+  }
 
   const stats = [
     {
@@ -195,7 +197,7 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground mb-1">Average Confidence</p>
                 <p className="text-2xl font-bold">
                   {confirmedProducts.length > 0 
-                    ? `${(confirmedProducts.reduce((sum, p) => sum + (p.confidence || 0), 0) / confirmedProducts.length * 100).toFixed(0)}%`
+                    ? `${(confirmedProducts.reduce((sum, p) => sum + (p.confidence ?? 0), 0) / confirmedProducts.length * 100).toFixed(0)}%`
                     : 'N/A'
                   }
                 </p>

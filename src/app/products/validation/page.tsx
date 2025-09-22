@@ -1,26 +1,27 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useProductStore } from '@/store/product-store'
-import { ProductValidation } from '@/components/products/ProductValidation'
-import { BulkProductValidation } from '@/components/products/BulkProductValidation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { 
-  Sparkles, 
   ArrowLeft,
   CheckCircle,
-  RefreshCw,
   AlertCircle,
-  Package
+  Package,
+  Trash2
 } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
-export default function ValidationPage() {
+import { BulkProductValidation } from '@/components/products/BulkProductValidation'
+import { ProductValidation } from '@/components/products/ProductValidation'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { useProductStore } from '@/store/product-store'
+
+export default function ValidationPage(): JSX.Element {
   const router = useRouter()
-  const { getProductsByStatus, updateProductStatus } = useProductStore()
+  const { getProductsByStatus, updateProductStatus, deleteProduct } = useProductStore()
   const [mounted, setMounted] = useState(false)
   const [validatingProductId, setValidatingProductId] = useState<string | null>(null)
   const [bulkValidating, setBulkValidating] = useState(false)
@@ -39,17 +40,17 @@ export default function ValidationPage() {
 
   const analyzedProducts = getProductsByStatus('ANALYZED')
 
-  const handleStartValidation = (productId: string) => {
+  const handleStartValidation = (productId: string): void => {
     setValidatingProductId(productId)
     setBulkValidating(false)
   }
 
-  const handleStartBulkValidation = () => {
+  const handleStartBulkValidation = (): void => {
     setBulkValidating(true)
     setValidatingProductId(null)
   }
 
-  const handleValidationComplete = () => {
+  const handleValidationComplete = (): void => {
     setValidatingProductId(null)
     setBulkValidating(false)
     
@@ -60,9 +61,18 @@ export default function ValidationPage() {
     }
   }
 
-  const handleSkipProduct = (productId: string) => {
+  const handleSkipProduct = (productId: string): void => {
     // Mark as validated without changes (skip for now)
     updateProductStatus(productId, 'VALIDATED')
+  }
+
+  const handleDeleteProduct = (productId: string): void => {
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this product? This action cannot be undone.'
+    )
+    if (confirmDelete) {
+      void deleteProduct(productId)
+    }
   }
 
   // If in validation mode, show validation component
@@ -143,17 +153,19 @@ export default function ValidationPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {analyzedProducts.map((product) => {
-            const primaryPhoto = product.photos.find(p => p.isPrimary) || product.photos[0]
+            const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
             
             return (
               <Card key={product.id} className="overflow-hidden">
                 {/* Product Image */}
-                <div className="aspect-video bg-muted overflow-hidden">
-                  {primaryPhoto && (
-                    <img
+                <div className="aspect-video bg-muted overflow-hidden relative">
+                  {primaryPhoto?.dataUrl && (
+                    <Image
                       src={primaryPhoto.dataUrl}
-                      alt={product.name || 'Product'}
-                      className="w-full h-full object-cover"
+                      alt={product.name ?? 'Product'}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   )}
                 </div>
@@ -163,7 +175,7 @@ export default function ValidationPage() {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold text-lg">
-                        {product.name || `Product ${product.id.slice(-6)}`}
+                        {product.name ?? `Product ${product.id.slice(-6)}`}
                       </h3>
                       {product.confidence && (
                         <Badge variant="outline" className="ml-2">
@@ -209,6 +221,15 @@ export default function ValidationPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="w-8 px-0"
+                      title="Delete product"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
