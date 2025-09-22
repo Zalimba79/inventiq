@@ -183,7 +183,7 @@ function ProductValidationCard({
   )
 }
 
-export function BulkProductValidation({ productIds, onComplete, className }: BulkProductValidationProps) {
+export function BulkProductValidation({ productIds, onComplete, className }: BulkProductValidationProps): JSX.Element {
   const { products, updateProductStatus } = useProductStore()
   const { toast } = useToast()
   
@@ -193,7 +193,7 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
 
   const productsToValidate = products.filter(p => productIds.includes(p.id))
 
-  const handleToggleSelection = (productId: string) => {
+  const handleToggleSelection = (productId: string): void => {
     const newSelected = new Set(selectedIds)
     if (newSelected.has(productId)) {
       newSelected.delete(productId)
@@ -203,7 +203,7 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
     setSelectedIds(newSelected)
   }
 
-  const handleValidateSelected = () => {
+  const handleValidateSelected = (): void => {
     selectedIds.forEach(id => {
       updateProductStatus(id, 'VALIDATED')
       validatedIds.add(id)
@@ -221,7 +221,7 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
     }
   }
 
-  const handleRejectSelected = () => {
+  const handleRejectSelected = (): void => {
     selectedIds.forEach(id => {
       updateProductStatus(id, 'DRAFT')
       rejectedIds.add(id)
@@ -235,7 +235,7 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
     })
   }
 
-  const handleValidateSingle = (productId: string) => {
+  const handleValidateSingle = (productId: string): void => {
     updateProductStatus(productId, 'VALIDATED')
     validatedIds.add(productId)
     setValidatedIds(new Set(validatedIds))
@@ -246,7 +246,7 @@ export function BulkProductValidation({ productIds, onComplete, className }: Bul
     })
   }
 
-  const handleRejectSingle = (productId: string) => {
+  const handleRejectSingle = (productId: string): void => {
     updateProductStatus(productId, 'DRAFT')
     rejectedIds.add(productId)
     setRejectedIds(new Set(rejectedIds))

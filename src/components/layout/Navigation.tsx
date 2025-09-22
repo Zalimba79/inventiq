@@ -40,7 +40,7 @@ const navItems = [
   }
 ]
 
-export function Navigation() {
+export function Navigation(): JSX.Element {
   const pathname = usePathname()
 
   return (
@@ -83,7 +83,7 @@ export function Navigation() {
   )
 }
 
-export function MobileNavigation() {
+export function MobileNavigation(): JSX.Element {
   const pathname = usePathname()
 
   return (

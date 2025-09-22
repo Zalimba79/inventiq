@@ -68,7 +68,7 @@ export function getResolutionDetails(resolution: CameraResolution): Resolution {
   return RESOLUTION_OPTIONS[resolution]
 }
 
-export function getFormatDetails(format: ImageFormat) {
+export function getFormatDetails(format: ImageFormat): { label: string; mimeType: string } {
   return IMAGE_FORMAT_OPTIONS[format]
 }
 

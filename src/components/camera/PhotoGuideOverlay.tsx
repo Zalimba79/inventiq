@@ -8,7 +8,7 @@ interface PhotoGuideOverlayProps {
   onClose: () => void
 }
 
-export function PhotoGuideOverlay({ visible, onClose }: PhotoGuideOverlayProps) {
+export function PhotoGuideOverlay({ visible, onClose }: PhotoGuideOverlayProps): JSX.Element | null {
   if (!visible) return null
 
   return (

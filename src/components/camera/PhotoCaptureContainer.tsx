@@ -1,6 +1,6 @@
 "use client"
 
-import React, { type ReactNode } from 'react'
+import React, { createContext, useContext, type ReactNode } from 'react'
 
 import { type ProductPhoto } from '@/store/product-store'
 
@@ -14,10 +14,10 @@ export interface PhotoCaptureContext {
   onFinish: () => void
 }
 
-const PhotoCaptureContext = React.createContext<PhotoCaptureContext | null>(null)
+const PhotoCaptureContext = createContext<PhotoCaptureContext | null>(null)
 
-export function usePhotoCapture() {
-  const context = React.useContext(PhotoCaptureContext)
+export function usePhotoCapture(): PhotoCaptureContext {
+  const context = useContext(PhotoCaptureContext)
   if (!context) {
     throw new Error('usePhotoCapture must be used within PhotoCaptureContainer')
   }
@@ -44,7 +44,7 @@ export function PhotoCaptureContainer({
   onRemovePhoto,
   onCreateProduct,
   onFinish
-}: PhotoCaptureContainerProps) {
+}: PhotoCaptureContainerProps): JSX.Element {
   const value: PhotoCaptureContext = {
     photos,
     quantity,

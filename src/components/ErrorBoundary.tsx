@@ -1,7 +1,7 @@
 "use client"
 
 import { AlertCircle } from 'lucide-react'
-import React from 'react'
+import React, { Component } from 'react'
 
 import { Button } from '@/components/ui/button'
 
@@ -10,7 +10,7 @@ interface ErrorBoundaryState {
   error?: Error
 }
 
-export class ErrorBoundary extends React.Component<
+export class ErrorBoundary extends Component<
   { children: React.ReactNode },
   ErrorBoundaryState
 > {

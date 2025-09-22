@@ -6,7 +6,7 @@ import { type CameraConfiguration, DEFAULT_CAMERA_CONFIG, validateCameraConfig }
 
 const STORAGE_KEY = 'camera-configuration'
 
-export function useCameraConfiguration() {
+export function useCameraConfiguration(): { config: CameraConfiguration; updateConfig: (updates: Partial<CameraConfiguration>) => void; resetConfig: () => void; isLoading: boolean } {
   const [config, setConfig] = useState<CameraConfiguration>(DEFAULT_CAMERA_CONFIG)
   const [isLoading, setIsLoading] = useState(true)
 

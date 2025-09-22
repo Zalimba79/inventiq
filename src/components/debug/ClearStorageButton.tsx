@@ -6,10 +6,10 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 
-export function ClearStorageButton() {
+export function ClearStorageButton(): JSX.Element {
   const { toast } = useToast()
 
-  const handleClearStorage = () => {
+  const handleClearStorage = (): void => {
     const confirmClear = window.confirm(
       'This will delete all products and photos from your browser. This action cannot be undone. Continue?'
     )

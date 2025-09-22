@@ -24,7 +24,7 @@ interface ProductGalleryProps {
 
 
 
-export function ProductGallery({ className, onProductClick }: ProductGalleryProps) {
+export function ProductGallery({ className, onProductClick }: ProductGalleryProps): JSX.Element {
   const {
     products,
     selectedProductIds,
@@ -57,7 +57,7 @@ export function ProductGallery({ className, onProductClick }: ProductGalleryProp
   }
 
   // Handle checkbox change
-  const handleCheckboxChange = (productId: string, checked: boolean) => {
+  const handleCheckboxChange = (productId: string, checked: boolean): void => {
     if (checked) {
       selectProduct(productId)
     } else {
@@ -66,7 +66,7 @@ export function ProductGallery({ className, onProductClick }: ProductGalleryProp
   }
 
   // Handle select all
-  const handleSelectAll = () => {
+  const handleSelectAll = (): void => {
     if (selectedProductIds.size === filteredProducts.length) {
       deselectAllProducts()
     } else {
@@ -75,7 +75,7 @@ export function ProductGallery({ className, onProductClick }: ProductGalleryProp
   }
 
   // Start analysis for selected products
-  const handleAnalyzeSelected = async () => {
+  const handleAnalyzeSelected = async (): Promise<void> => {
     const selectedIds = Array.from(selectedProductIds)
     if (selectedIds.length === 0) return
     
@@ -85,7 +85,7 @@ export function ProductGallery({ className, onProductClick }: ProductGalleryProp
   }
 
   // Re-analyze a single product
-  const handleReanalyze = async (productId: string) => {
+  const handleReanalyze = async (productId: string): Promise<void> => {
     queueProductsForAnalysis([productId])
     await processAnalysisQueue()
   }

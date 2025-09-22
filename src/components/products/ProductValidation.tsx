@@ -179,8 +179,8 @@ function ProductInfoDisplay({ product }: { product: Product }): React.ReactEleme
         <div>
           <span className="text-sm font-medium text-muted-foreground">Features</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {product.features.map((feature, index) => (
-              <Badge key={index} variant="secondary">
+            {product.features.map((feature) => (
+              <Badge key={feature} variant="secondary">
                 {feature}
               </Badge>
             ))}
@@ -209,7 +209,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     )
   }
 
-  const handleEdit = () => {
+  const handleEdit = (): void => {
     setIsEditing(true)
     setEditedProduct({
       name: product.name,
@@ -223,7 +223,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     })
   }
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     updateProduct(productId, editedProduct)
     setIsEditing(false)
     toast({
@@ -232,12 +232,12 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     })
   }
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     setIsEditing(false)
     setEditedProduct({})
   }
 
-  const handleValidate = () => {
+  const handleValidate = (): void => {
     updateProductStatus(productId, 'VALIDATED')
     toast({
       title: "Product validated",
@@ -246,7 +246,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     onComplete?.()
   }
 
-  const handleReject = () => {
+  const handleReject = (): void => {
     updateProductStatus(productId, 'DRAFT')
     toast({
       title: "Validation rejected",
@@ -255,7 +255,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     onComplete?.()
   }
 
-  const handleReanalyze = async () => {
+  const handleReanalyze = async (): Promise<void> => {
     setIsReanalyzing(true)
     queueProductsForAnalysis([productId])
     await processAnalysisQueue()
@@ -266,14 +266,14 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
     })
   }
 
-  const getConfidenceColor = (confidence?: number) => {
+  const getConfidenceColor = (confidence?: number): string => {
     if (!confidence) return 'text-gray-500'
     if (confidence >= 0.8) return 'text-green-600'
     if (confidence >= 0.6) return 'text-yellow-600'
     return 'text-red-600'
   }
 
-  const getConfidenceLabel = (confidence?: number) => {
+  const getConfidenceLabel = (confidence?: number): string => {
     if (!confidence) return 'Unknown'
     if (confidence >= 0.8) return 'High Confidence'
     if (confidence >= 0.6) return 'Medium Confidence'

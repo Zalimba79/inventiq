@@ -214,6 +214,7 @@ export class PerformanceMonitor {
     this.timers.delete(label)
     
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.log(`⚡ ${label}: ${duration.toFixed(2)}ms`)
     }
     

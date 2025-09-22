@@ -1,6 +1,7 @@
 "use client"
 
 import { Trash2 } from 'lucide-react'
+import Image from 'next/image'
 import React from 'react'
 
 import { type ProductPhoto } from '@/store/product-store'
@@ -17,7 +18,7 @@ export function PhotoPreviewStrip({
   onRemovePhoto,
   autoAdvance = false,
   photosPerProduct = 3
-}: PhotoPreviewStripProps) {
+}: PhotoPreviewStripProps): JSX.Element | null {
   if (photos.length === 0) return null
 
   return (
@@ -31,12 +32,13 @@ export function PhotoPreviewStrip({
                 className="relative group flex-shrink-0"
                 style={{ transform: 'translateZ(0)' }}
               >
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors">
-                  <img
-                    src={photo.dataUrl}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors relative">
+                  <Image
+                    src={photo.dataUrl ?? ''}
                     alt={`Product view ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 80px, 96px"
                     style={{ imageRendering: 'crisp-edges' }}
                   />
                 </div>

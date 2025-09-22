@@ -30,7 +30,7 @@ interface ValidationHistoryProps {
   className?: string
 }
 
-export function ValidationHistory({ productId, limit = 10, className }: ValidationHistoryProps) {
+export function ValidationHistory({ productId, limit = 10, className }: ValidationHistoryProps): JSX.Element {
   const [history, setHistory] = useState<ValidationHistoryEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -57,7 +57,7 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     void fetchHistory()
   }, [fetchHistory])
 
-  const getActionIcon = (action: string) => {
+  const getActionIcon = (action: string): JSX.Element => {
     switch (action) {
       case 'validate':
         return <CheckCircle className="w-4 h-4 text-green-600" />
@@ -70,7 +70,7 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     }
   }
 
-  const getActionLabel = (action: string) => {
+  const getActionLabel = (action: string): string => {
     switch (action) {
       case 'validate':
         return 'Validated'
@@ -83,7 +83,7 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string): JSX.Element => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       'DRAFT': 'outline',
       'ANALYZED': 'secondary',
@@ -92,13 +92,15 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
     }
     
     return (
+      // Status comes from controlled product data, safe to index
+      // eslint-disable-next-line security/detect-object-injection
       <Badge variant={variants[status] ?? 'outline'} className="text-xs">
         {status}
       </Badge>
     )
   }
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: string): string => {
     const date = new Date(timestamp)
     const now = new Date()
     const diff = now.getTime() - date.getTime()
@@ -163,9 +165,9 @@ export function ValidationHistory({ productId, limit = 10, className }: Validati
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {history.map((entry, index) => (
+          {history.map((entry) => (
             <div
-              key={`${entry.productId}-${index}`}
+              key={`${entry.productId}-${entry.timestamp}`}
               className="flex items-start gap-3 pb-4 border-b last:border-0"
             >
               <div className="mt-1">

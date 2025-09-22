@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
 
-export function Toaster() {
+export function Toaster(): JSX.Element {
   const { toasts } = useToast()
 
   return (

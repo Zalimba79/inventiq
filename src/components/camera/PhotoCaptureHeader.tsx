@@ -18,10 +18,10 @@ export function PhotoCaptureHeader({
   onSettingsClick,
   autoAdvance = false,
   photosPerProduct = 3
-}: PhotoCaptureHeaderProps) {
+}: PhotoCaptureHeaderProps): JSX.Element {
   const { photos, quantity, onQuantityChange, onCreateProduct, onFinish } = usePhotoCapture()
   
-  const getStatusText = () => {
+  const getStatusText = (): string => {
     if (autoAdvance) {
       return `${photos.length}/${photosPerProduct} photos`
     }

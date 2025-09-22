@@ -38,7 +38,7 @@ export const PerformanceMonitor = memo(({
 
   useEffect(() => {
     // Update storage info periodically
-    const updateStorageInfo = async () => {
+    const updateStorageInfo = async (): Promise<void> => {
       const info = await getStorageQuota()
       setStorageInfo(info)
     }
@@ -51,7 +51,7 @@ export const PerformanceMonitor = memo(({
 
   useEffect(() => {
     // Listen for performance events
-    const handlePerformanceUpdate = (event: CustomEvent<PerformanceMetrics>) => {
+    const handlePerformanceUpdate = (event: CustomEvent<PerformanceMetrics>): void => {
       const newMetrics = event.detail
       setMetrics(prev => [...prev.slice(-9), newMetrics]) // Keep last 10 metrics
       onMetricsUpdate?.(newMetrics)
@@ -188,6 +188,8 @@ export const PerformanceMonitor = memo(({
             <div className="text-xs font-medium">Recent Captures</div>
             <div className="space-y-1 max-h-20 overflow-y-auto">
               {metrics.slice(-3).reverse().map((metric, index) => (
+                // Performance metrics don't have unique IDs, using index for display order
+                // eslint-disable-next-line react/no-array-index-key
                 <div key={index} className="flex justify-between text-xs">
                   <span className="flex items-center gap-1">
                     <Camera className="w-3 h-3" />
@@ -235,8 +237,8 @@ export const PerformanceMonitor = memo(({
 /**
  * Hook to emit performance metrics
  */
-export function usePerformanceEmitter() {
-  const emitMetrics = (metrics: PerformanceMetrics) => {
+export function usePerformanceEmitter(): { emitMetrics: (metrics: PerformanceMetrics) => void } {
+  const emitMetrics = (metrics: PerformanceMetrics): void => {
     window.dispatchEvent(new CustomEvent('performance-update', { detail: metrics }))
   }
 

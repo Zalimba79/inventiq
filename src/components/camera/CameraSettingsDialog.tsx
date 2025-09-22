@@ -41,8 +41,8 @@ export function CameraSettingsDialog({
   onOpenChange,
   config,
   onConfigChange
-}: CameraSettingsDialogProps) {
-  const handleChange = (key: keyof CameraConfig, value: string | number | boolean) => {
+}: CameraSettingsDialogProps): JSX.Element {
+  const handleChange = (key: keyof CameraConfig, value: string | number | boolean): void => {
     onConfigChange({ ...config, [key]: value })
   }
 

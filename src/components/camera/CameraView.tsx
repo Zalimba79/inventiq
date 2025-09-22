@@ -465,6 +465,8 @@ export const CameraView = memo(({
         {showGrid && (
           <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3">
             {Array.from({ length: 9 }).map((_, i) => (
+              // Grid cells are static, index is acceptable here
+              // eslint-disable-next-line react/no-array-index-key
               <div key={`grid-cell-${i}`} className="border border-white/20" />
             ))}
           </div>

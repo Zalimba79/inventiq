@@ -227,12 +227,14 @@ export default function ProductDetailPage(): JSX.Element | null {
               <CardTitle>Primary Photo</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
                 {primaryPhoto && (
-                  <img
-                    src={primaryPhoto.dataUrl}
+                  <Image
+                    src={primaryPhoto.dataUrl ?? ''}
                     alt="Primary product"
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 )}
               </div>

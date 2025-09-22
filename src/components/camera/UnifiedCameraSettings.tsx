@@ -37,7 +37,7 @@ export function UnifiedCameraSettings({
   config,
   onConfigChange,
   onReset
-}: UnifiedCameraSettingsProps) {
+}: UnifiedCameraSettingsProps): JSX.Element {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">

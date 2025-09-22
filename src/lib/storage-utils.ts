@@ -117,6 +117,7 @@ export class OptimizedStorage {
  * IndexedDB storage for large datasets (fallback)
  */
 export class IndexedDBStorage {
+  private static readonly DB_ERROR_MESSAGE = 'Database operation failed'
   private dbName: string
   private version: number
   private db: IDBDatabase | null = null
@@ -130,7 +131,7 @@ export class IndexedDBStorage {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version)
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => {
         this.db = request.result
         resolve()
@@ -159,7 +160,7 @@ export class IndexedDBStorage {
       const store = transaction.objectStore(storeName)
       const request = store.put(data)
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => resolve()
     })
   }
@@ -172,7 +173,7 @@ export class IndexedDBStorage {
       const store = transaction.objectStore(storeName)
       const request = store.get(key)
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => resolve(request.result as T | undefined)
     })
   }
@@ -185,7 +186,7 @@ export class IndexedDBStorage {
       const store = transaction.objectStore(storeName)
       const request = store.getAll()
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => resolve(request.result as T[])
     })
   }
@@ -198,7 +199,7 @@ export class IndexedDBStorage {
       const store = transaction.objectStore(storeName)
       const request = store.delete(key)
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => resolve()
     })
   }
@@ -211,7 +212,7 @@ export class IndexedDBStorage {
       const store = transaction.objectStore(storeName)
       const request = store.clear()
       
-      request.onerror = () => reject(new Error(request.error?.message ?? 'Database operation failed'))
+      request.onerror = () => reject(new Error(request.error?.message ?? IndexedDBStorage.DB_ERROR_MESSAGE))
       request.onsuccess = () => resolve()
     })
   }

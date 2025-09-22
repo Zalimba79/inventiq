@@ -71,25 +71,25 @@ export function CameraSettings({ settings, onSettingsChange, isOpen = true, onCl
     onSettingsChange(updated)
   }
 
-  const handleAutoCaptureChange = (checked: boolean) => {
+  const handleAutoCaptureChange = (checked: boolean): void => {
     const updated = { ...localSettings, autoCapture: checked }
     setLocalSettings(updated)
     onSettingsChange(updated)
   }
 
-  const handleCaptureDelayChange = (value: number[]) => {
+  const handleCaptureDelayChange = (value: number[]): void => {
     const updated = { ...localSettings, captureDelay: value[0] }
     setLocalSettings(updated)
     onSettingsChange(updated)
   }
 
-  const handleGridChange = (checked: boolean) => {
+  const handleGridChange = (checked: boolean): void => {
     const updated = { ...localSettings, enableGrid: checked }
     setLocalSettings(updated)
     onSettingsChange(updated)
   }
 
-  const handleMirrorChange = (checked: boolean) => {
+  const handleMirrorChange = (checked: boolean): void => {
     const updated = { ...localSettings, mirror: checked }
     setLocalSettings(updated)
     onSettingsChange(updated)

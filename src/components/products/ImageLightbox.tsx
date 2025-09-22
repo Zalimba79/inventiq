@@ -67,7 +67,7 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
   useEffect(() => {
     if (!isOpen) return
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       switch (e.key) {
         case '+':
         case '=':

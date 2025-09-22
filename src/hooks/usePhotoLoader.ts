@@ -17,7 +17,7 @@ export interface PhotoWithData extends ProductPhoto {
 /**
  * Load a single photo with automatic IndexedDB fallback
  */
-export function usePhotoLoader(photo: ProductPhoto | null) {
+export function usePhotoLoader(photo: ProductPhoto | null): { photo: PhotoWithData | null; isLoading: boolean; error: string | null } {
   const [photoData, setPhotoData] = useState<PhotoWithData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,7 +75,7 @@ export function usePhotoLoader(photo: ProductPhoto | null) {
 /**
  * Load multiple photos with batching
  */
-export function usePhotoListLoader(photos: ProductPhoto[]) {
+export function usePhotoListLoader(photos: ProductPhoto[]): { photos: PhotoWithData[]; isLoading: boolean; error: string | null; reload: () => Promise<void> } {
   const [loadedPhotos, setLoadedPhotos] = useState<PhotoWithData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -99,6 +99,7 @@ export function usePhotoListLoader(photos: ProductPhoto[]) {
         photos.map(async (photo, index) => {
           if (photo.dataUrl) {
             // Already loaded
+            // eslint-disable-next-line security/detect-object-injection
             results[index] = {
               ...photo,
               dataUrl: photo.dataUrl
@@ -107,11 +108,13 @@ export function usePhotoListLoader(photos: ProductPhoto[]) {
             // Load from IndexedDB
             const dataUrl = await loadPhoto(photo.id)
             if (dataUrl) {
+              // eslint-disable-next-line security/detect-object-injection
               results[index] = {
                 ...photo,
                 dataUrl
               }
             } else {
+              // eslint-disable-next-line security/detect-object-injection
               results[index] = {
                 ...photo,
                 dataUrl: '', // Fallback
@@ -120,6 +123,7 @@ export function usePhotoListLoader(photos: ProductPhoto[]) {
             }
           } else {
             // Default storage type, assume localStorage
+            // eslint-disable-next-line security/detect-object-injection
             results[index] = {
               ...photo,
               dataUrl: photo.dataUrl ?? '',

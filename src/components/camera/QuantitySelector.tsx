@@ -18,16 +18,16 @@ export function QuantitySelector({
   onChange,
   min = 1,
   max = 9999
-}: QuantitySelectorProps) {
-  const handleDecrease = () => {
+}: QuantitySelectorProps): JSX.Element {
+  const handleDecrease = (): void => {
     onChange(Math.max(min, quantity - 1))
   }
 
-  const handleIncrease = () => {
+  const handleIncrease = (): void => {
     onChange(Math.min(max, quantity + 1))
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = parseInt(e.target.value) || min
     onChange(Math.max(min, Math.min(max, value)))
   }
