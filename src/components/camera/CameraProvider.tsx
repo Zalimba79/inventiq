@@ -1,10 +1,11 @@
 "use client"
 
-import React, { createContext, useContext, type ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, type ReactNode } from 'react'
 
 import { useCamera, type UseCameraReturn } from '@/hooks/camera/useCamera'
 import { useCameraControls, type UseCameraControlsReturn } from '@/hooks/camera/useCameraControls'
 import { useMediaStream, type MediaStreamOptions, type UseMediaStreamReturn } from '@/hooks/camera/useMediaStream'
+import type { ExtendedMediaTrackConstraints } from '@/types/camera-extended'
 
 interface CameraContextValue {
   stream: UseMediaStreamReturn
@@ -33,27 +34,28 @@ export function CameraProvider({ children, options = {} }: CameraProviderProps):
   const controls = useCameraControls()
 
   // Initialize capabilities when stream is ready
-  React.useEffect(() => {
+  useEffect(() => {
     if (stream.stream) {
       controls.getCapabilities(stream.stream)
     }
   }, [stream.stream, controls])
 
   // Apply zoom and torch controls when they change
-  React.useEffect(() => {
+  useEffect(() => {
     if (stream.stream && controls.capabilities) {
-      const constraints: any = {}
+      const constraints: ExtendedMediaTrackConstraints = {}
+      const advanced: ExtendedMediaTrackConstraints['advanced'] = []
       
       if (controls.capabilities.zoom && controls.zoom !== 1) {
-        constraints.advanced = [{ zoom: controls.zoom }]
+        advanced.push({ zoom: controls.zoom })
       }
       
       if (controls.capabilities.torch) {
-        constraints.advanced = constraints.advanced ?? []
-        constraints.advanced.push({ torch: controls.torch })
+        advanced.push({ torch: controls.torch })
       }
       
-      if (Object.keys(constraints).length > 0) {
+      if (advanced.length > 0) {
+        constraints.advanced = advanced
         void controls.applyConstraints(stream.stream, constraints)
       }
     }

@@ -31,9 +31,7 @@ export function useCamera(): UseCameraReturn {
         height = videoElement.videoHeight
       } = options
 
-      if (!canvasRef.current) {
-        canvasRef.current = document.createElement('canvas')
-      }
+      canvasRef.current ??= document.createElement('canvas')
       
       const canvas = canvasRef.current
       canvas.width = width
@@ -54,7 +52,7 @@ export function useCamera(): UseCameraReturn {
 
   const captureWithImageCapture = useCallback(
     async (stream: MediaStream, options: CaptureOptions = {}): Promise<string> => {
-      const { quality = 0.9, format = 'jpeg' } = options
+      const { } = options
 
       const videoTrack = stream.getVideoTracks()[0]
       if (!videoTrack) throw new Error('No video track available')
@@ -108,7 +106,7 @@ export function useCamera(): UseCameraReturn {
         // Fallback to canvas capture
         const video = document.createElement('video')
         video.srcObject = stream
-        video.play()
+        void video.play()
         
         return new Promise((resolve) => {
           video.onloadedmetadata = () => {

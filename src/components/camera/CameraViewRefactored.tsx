@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 
 import { cn } from '@/lib/utils'
 
-import { CameraControlsUI } from './CameraControlsUI'
+import { CameraControlsUI } from './CameraControlsUi'
 import { CameraPreview } from './CameraPreview'
 import { CameraProvider, useCameraContext } from './CameraProvider'
 
@@ -68,8 +68,8 @@ function CameraViewContent({
           isLoading={stream.isLoading}
           isCapturing={camera.isCapturing}
           facingMode={stream.facingMode}
-          onCapture={handleCapture}
-          onSwitchCamera={stream.switchCamera}
+          onCapture={() => void handleCapture()}
+          onSwitchCamera={() => void stream.switchCamera()}
           onClose={onClose}
         />
       </div>

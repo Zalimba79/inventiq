@@ -190,10 +190,19 @@ npm run typecheck  # TypeScript type checking
 
 ## Key Components
 
+### Dashboard Components (New Architecture)
+- `HomePage`: Main dashboard orchestration component
+- `Header`: Top navigation with user menu and notifications
+- `StatsCard`: Dashboard statistics display
+- `RecentCaptures`: Recent photo thumbnails
+- `QuickActions`: Quick access buttons
+- `ActivityFeed`: Recent activity timeline
+
 ### Camera Components
 - `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `CameraView`: WebRTC camera integration with 4K support
+- `CameraViewRefactored`: Updated WebRTC camera integration
 - `PhotoPreview`: Display captured photos
+- `CameraSettings`: Unified camera configuration
 
 ### Product Components
 - `ProductGallery`: Display products with filtering

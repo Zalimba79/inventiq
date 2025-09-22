@@ -1,11 +1,8 @@
 // Main components
 export { CameraViewRefactored } from './CameraViewRefactored'
 export { CameraProvider, useCameraContext } from './CameraProvider'
-export { CameraPreview, ConnectedCameraPreview } from './CameraPreview'
-export { CameraControlsUI, ConnectedCameraControlsUI } from './CameraControlsUI'
-
-// Legacy components (to be deprecated)
-export { CameraView } from './CameraView'
+export { CameraPreview } from './CameraPreview'
+export { CameraControlsUI } from './CameraControlsUi'
 
 // Hooks
 export { useMediaStream } from '@/hooks/camera/useMediaStream'

@@ -15,7 +15,7 @@ import { useProductStore, type ProductPhoto } from '@/store/product-store'
 
 // New focused components
 import { CameraQuickActions } from './CameraQuickActions'
-import { CameraView } from './CameraView'
+import { CameraViewRefactored } from './CameraViewRefactored'
 import { PhotoCaptureContainer } from './PhotoCaptureContainer'
 import { PhotoCaptureHeader } from './PhotoCaptureHeader'
 import { PhotoGuideOverlay } from './PhotoGuideOverlay'
@@ -167,16 +167,15 @@ export const DirectPhotoCaptureRefactored = memo(({
         />
 
         <div className="flex-1 min-h-0 relative overflow-hidden">
-          <CameraView
+          <CameraViewRefactored
             onCapture={handleCapture}
             className="h-full"
-            showPreviewOverlay={showPreviewOverlay}
             showGrid={cameraConfig.showGrid}
-            settings={{
-              facingMode: cameraConfig.facingMode,
-              resolution: getResolutionDetails(cameraConfig.resolution)
-            }}
-            previewContent={
+            facingMode={cameraConfig.facingMode}
+            resolution={getResolutionDetails(cameraConfig.resolution)}
+          />
+          
+          {showPreviewOverlay && (
               <div className="text-center">
                 {lastCapturedPhoto ? (
                   <div className="relative">
@@ -198,8 +197,7 @@ export const DirectPhotoCaptureRefactored = memo(({
                 )}
                 <p className="text-white font-medium">Photo saved!</p>
               </div>
-            }
-          />
+          )}
           
           <PhotoGuideOverlay 
             visible={showPhotoGuide && currentPhotos.length === 0}

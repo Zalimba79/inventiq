@@ -1,22 +1,21 @@
 "use client"
 
 import { 
-  Camera, 
-  CameraOff, 
-  FlipHorizontal2, 
-  Zap,
-  ZapOff,
   ZoomIn,
   ZoomOut,
-  RotateCw,
-  X,
-  Settings
 } from 'lucide-react'
 import React from 'react'
 
-import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
+
+import { 
+  CaptureButton,
+  CloseButton,
+  SettingsButton,
+  SwitchCameraButton,
+  TorchButton
+} from './CameraControlButtons'
 
 interface CameraControlsUIProps {
   className?: string
@@ -53,59 +52,30 @@ export function CameraControlsUI({
   onClose,
   onOpenSettings
 }: CameraControlsUIProps): JSX.Element {
-  const canCapture = hasPermission && !isLoading && !isCapturing
-
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Top controls bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {onSwitchCamera && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onSwitchCamera}
-              disabled={!hasPermission || isLoading}
-              title="Switch camera"
-            >
-              <FlipHorizontal2 className="h-5 w-5" />
-            </Button>
-          )}
+          <SwitchCameraButton
+            onSwitchCamera={onSwitchCamera}
+            hasPermission={hasPermission}
+            isLoading={isLoading}
+            facingMode={facingMode}
+          />
           
-          {canToggleTorch && onTorchToggle && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onTorchToggle}
-              disabled={!hasPermission || isLoading}
-              title={torch ? "Turn off flash" : "Turn on flash"}
-            >
-              {torch ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
-            </Button>
-          )}
+          <TorchButton
+            canToggleTorch={canToggleTorch}
+            onTorchToggle={onTorchToggle}
+            hasPermission={hasPermission}
+            isLoading={isLoading}
+            torch={torch}
+          />
           
-          {onOpenSettings && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onOpenSettings}
-              title="Camera settings"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          )}
+          <SettingsButton onOpenSettings={onOpenSettings} />
         </div>
         
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            title="Close camera"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        )}
+        <CloseButton onClose={onClose} />
       </div>
 
       {/* Zoom control */}
@@ -130,23 +100,12 @@ export function CameraControlsUI({
 
       {/* Main capture button */}
       <div className="flex justify-center">
-        <Button
-          size="lg"
-          onClick={onCapture}
-          disabled={!canCapture}
-          className={cn(
-            "h-16 w-16 rounded-full",
-            isCapturing && "animate-pulse"
-          )}
-        >
-          {isCapturing ? (
-            <RotateCw className="h-8 w-8 animate-spin" />
-          ) : hasPermission === false ? (
-            <CameraOff className="h-8 w-8" />
-          ) : (
-            <Camera className="h-8 w-8" />
-          )}
-        </Button>
+        <CaptureButton
+          onCapture={onCapture}
+          isCapturing={isCapturing}
+          hasPermission={hasPermission}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Status text */}
@@ -165,44 +124,15 @@ export function CameraControlsUI({
           Capturing...
         </p>
       )}
+      {!isLoading && !isCapturing && hasPermission && (
+        <p className="text-center text-xs text-muted-foreground">
+          {facingMode === 'user' ? 'Front camera' : 'Back camera'}
+        </p>
+      )}
     </div>
   )
 }
 
-// Connected version that uses the camera context
-interface ConnectedCameraControlsUIProps extends Omit<CameraControlsUIProps, 'hasPermission' | 'isLoading' | 'facingMode' | 'zoom' | 'torch' | 'isCapturing' | 'onCapture'> {
-  onImageCapture?: (imageData: string) => void
-}
-
-export function ConnectedCameraControlsUI({ 
-  onImageCapture,
-  ...props 
-}: ConnectedCameraControlsUIProps): JSX.Element {
-  const { useCameraContext } = require('./CameraProvider')
-  const { stream, camera, controls } = useCameraContext()
-
-  const handleCapture = async (): Promise<void> => {
-    if (stream.stream) {
-      const imageData = await camera.capturePhoto(stream.stream)
-      onImageCapture?.(imageData)
-    }
-  }
-
-  return (
-    <CameraControlsUI
-      hasPermission={stream.hasPermission}
-      isLoading={stream.isLoading}
-      isCapturing={camera.isCapturing}
-      facingMode={stream.facingMode}
-      zoom={controls.zoom}
-      zoomRange={controls.capabilities?.zoom}
-      torch={controls.torch}
-      canToggleTorch={controls.capabilities?.torch ?? false}
-      onCapture={handleCapture}
-      onSwitchCamera={stream.switchCamera}
-      onZoomChange={controls.setZoom}
-      onTorchToggle={() => controls.setTorch(!controls.torch)}
-      {...props}
-    />
-  )
-}
+// Note: ConnectedCameraControlsUI wurde entfernt
+// Verwende stattdessen CameraControlsUI direkt mit useCameraContext in der Parent-Komponente
+// Dies vermeidet zirkuläre Abhängigkeiten

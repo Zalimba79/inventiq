@@ -218,6 +218,7 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
         </div>
 
         {/* Image Container */}
+        {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
         <div 
           className="relative w-full h-full flex items-center justify-center overflow-hidden"
           onMouseDown={handleMouseDown}
@@ -226,10 +227,11 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
           role="img"
-          aria-label={`Lightbox view of ${imageAlt}`}
+          aria-label={`Lightbox view of ${imageAlt}. Use scroll to zoom, drag to pan.`}
           tabIndex={0}
           style={{ cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
         >
+          {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
           <Image
             src={imageSrc}
             alt={imageAlt}

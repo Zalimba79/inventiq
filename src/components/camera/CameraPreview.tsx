@@ -76,19 +76,6 @@ export function CameraPreview({
   )
 }
 
-// Export a connected version that uses the context
-export function ConnectedCameraPreview({ 
-  className, 
-  ...props 
-}: Omit<CameraPreviewProps, 'stream'>): JSX.Element | null {
-  const { useCameraContext } = require('./CameraProvider')
-  const { stream } = useCameraContext()
-  
-  return (
-    <CameraPreview 
-      stream={stream.stream} 
-      className={className}
-      {...props}
-    />
-  )
-}
+// Note: ConnectedCameraPreview wurde entfernt
+// Verwende stattdessen CameraPreview direkt mit useCameraContext in der Parent-Komponente
+// Dies vermeidet zirkuläre Abhängigkeiten und require() Verwendung

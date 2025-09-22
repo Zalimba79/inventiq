@@ -90,11 +90,7 @@ export function useMediaStream(options: MediaStreamOptions = {}): UseMediaStream
   }, [facingMode, startStream])
 
   // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopStream()
-    }
-  }, [stopStream])
+  useEffect(() => stopStream, [stopStream])
 
   return {
     stream,

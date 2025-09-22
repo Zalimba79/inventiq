@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import type { ExtendedMediaTrackCapabilities, ExtendedMediaTrackConstraints } from '@/types/camera-extended'
+import type { ExtendedMediaTrackConstraints } from '@/types/camera-extended'
 
 export interface CameraCapabilities {
   zoom?: { min: number; max: number; step: number }
@@ -35,7 +35,7 @@ export function useCameraControls(): UseCameraControlsReturn {
     
     if (typeof videoTrack.getCapabilities === 'function') {
       try {
-        const caps = videoTrack.getCapabilities() as ExtendedMediaTrackCapabilities
+        const caps = videoTrack.getCapabilities()
         const capabilities: CameraCapabilities = {}
         
         if (caps.zoom) {
