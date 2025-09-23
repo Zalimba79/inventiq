@@ -82,7 +82,7 @@ export function StatsCard({ stats, className }: StatsCardProps): JSX.Element {
   return (
     <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4", className)}>
       {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
+        <Card key={`stat-${stat.label}-${index}`} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className="text-muted-foreground">

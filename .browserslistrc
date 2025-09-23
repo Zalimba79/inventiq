@@ -1,0 +1,15 @@
+# Browserslist configuration for CSS autoprefixing
+# Supports modern browsers and ensures proper vendor prefixes
+
+# Production browsers
+defaults
+not IE 11
+not dead
+
+# Ensure text-size-adjust support
+Chrome >= 54
+ChromeAndroid >= 54
+Edge >= 79
+Firefox >= 60
+Safari >= 12
+iOS >= 12

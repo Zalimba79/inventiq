@@ -119,7 +119,8 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
   }, [])
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
+    // Note: preventDefault removed as wheel events are passive by default
+    // The zoom functionality still works without preventing default scroll
     const delta = e.deltaY > 0 ? -0.2 : 0.2
     setZoom(prev => Math.max(0.5, Math.min(5, prev + delta)))
   }, [])

@@ -270,13 +270,13 @@ export const useProductStore = create<ProductStore>()(
         let finalDataUrl = dataUrl
         let compressed = false
         
-        // Compress 4K images for storage efficiency
-        if (sizeInMB > 1) { // >1MB gets compressed
+        // Compress large images for storage efficiency while preserving resolution
+        if (sizeInMB > 2) { // >2MB gets compressed (allowing larger 4K images)
           try {
             const optimalFormat = await getOptimalImageFormat()
             const result = await compressImage(dataUrl, {
-              maxWidth: 1920, // Compress 4K to 1080p for storage
-              maxHeight: 1080,
+              maxWidth: 3840, // Preserve 4K resolution
+              maxHeight: 2160,
               quality: 0.85,
               format: optimalFormat
             })

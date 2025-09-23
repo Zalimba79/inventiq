@@ -1,6 +1,24 @@
+/* Import Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/**
+ * Browser Compatibility Fix for text-size-adjust
+ * 
+ * This overrides Tailwind's preflight styles to ensure proper browser support.
+ * The vendor prefixes MUST come before the standard property.
+ * Safari still requires -webkit prefix despite what some tools report.
+ */
+@layer base {
+  html,
+  :host {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
 
 @layer base {
   :root {
@@ -73,4 +91,21 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  /* Progress bar widths to avoid inline styles */
+  .progress-0 { width: 0%; }
+  .progress-10 { width: 10%; }
+  .progress-20 { width: 20%; }
+  .progress-25 { width: 25%; }
+  .progress-30 { width: 30%; }
+  .progress-40 { width: 40%; }
+  .progress-50 { width: 50%; }
+  .progress-60 { width: 60%; }
+  .progress-70 { width: 70%; }
+  .progress-75 { width: 75%; }
+  .progress-80 { width: 80%; }
+  .progress-90 { width: 90%; }
+  .progress-100 { width: 100%; }
 }

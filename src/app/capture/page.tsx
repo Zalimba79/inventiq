@@ -2,12 +2,41 @@
 
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-import { DirectPhotoCaptureRefactored } from '@/components/camera/DirectPhotoCaptureRefactored'
+import { SmartCaptureRouter } from '@/components/capture/SmartCaptureRouter'
 import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor'
 import { Button } from '@/components/ui/button'
+import { useProductStore } from '@/store/product-store'
 
 export default function CapturePage(): JSX.Element {
+  const router = useRouter()
+  const { createProduct } = useProductStore()
+  
+  const handleItemsCaptured = (items: Array<{
+    id: string
+    dataUrl: string
+    timestamp: Date
+    size: number
+    name: string
+    quantity?: number
+  }>): void => {
+    // Create products from captured items
+    items.forEach(item => {
+      void createProduct([{
+        id: crypto.randomUUID(),
+        dataUrl: item.dataUrl,
+        mimeType: 'image/jpeg',
+        size: item.size ?? 0,
+        isPrimary: true,
+        timestamp: item.timestamp ?? new Date()
+      }], item.quantity ?? 1)
+    })
+    
+    // Navigate to draft products
+    router.push('/products/draft')
+  }
+
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Header */}
@@ -29,9 +58,12 @@ export default function CapturePage(): JSX.Element {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Smart capture with dropzone, camera, and file upload */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <DirectPhotoCaptureRefactored className="h-full" />
+        <SmartCaptureRouter 
+          onItemsCaptured={handleItemsCaptured}
+          className="h-full" 
+        />
       </div>
       
       {/* Performance Monitor (development only) */}

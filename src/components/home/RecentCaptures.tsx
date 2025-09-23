@@ -30,8 +30,8 @@ export function RecentCaptures({ className, limit = 6 }: RecentCapturesProps): J
         <CardContent>
           <div className="animate-pulse">
             <div className="grid grid-cols-3 gap-2">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="aspect-square bg-muted rounded" />
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={`loading-${i}`} className="aspect-square bg-muted rounded" />
               ))}
             </div>
           </div>

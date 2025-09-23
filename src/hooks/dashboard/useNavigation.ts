@@ -22,9 +22,8 @@ export function useNavigation(): NavigationReturn {
     router.back()
   }, [router])
 
-  const isActive = useCallback((path: string) => {
-    return pathname === path || pathname.startsWith(path + '/')
-  }, [pathname])
+  const isActive = useCallback((path: string) => 
+    pathname === path || pathname.startsWith(`${path}/`), [pathname])
 
   return {
     currentPath: pathname,
