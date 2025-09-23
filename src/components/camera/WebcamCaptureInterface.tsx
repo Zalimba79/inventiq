@@ -261,7 +261,7 @@ export function WebcamCaptureInterface({
                     key={`${res.width}x${res.height}`} 
                     value={`${res.width}x${res.height}`}
                   >
-                    {res.label} ({res.width}×{res.height})
+                    {`${res.label} (${res.width}×${res.height})`}
                   </SelectItem>
                 ))}
               </SelectContent>
