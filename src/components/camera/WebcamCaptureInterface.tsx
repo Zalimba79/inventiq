@@ -49,7 +49,7 @@ export function WebcamCaptureInterface({
   const [showGrid, setShowGrid] = useState(true)
   const [isCapturing, setIsCapturing] = useState(false)
   const [devices, setDevices] = useState<DeviceInfo[]>([])
-  const [selectedDevice, setSelectedDevice] = useState<string>('')
+  const [selectedDevice, setSelectedDevice] = useState<string | undefined>(undefined)
   const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null)
   const [captureCount, setCaptureCount] = useState(0)
   
@@ -86,7 +86,7 @@ export function WebcamCaptureInterface({
       try {
         const deviceList = await navigator.mediaDevices.enumerateDevices()
         const videoDevices = deviceList
-          .filter(device => device.kind === 'videoinput')
+          .filter(device => device.kind === 'videoinput' && device.deviceId)
           .map(device => ({
             deviceId: device.deviceId,
             label: device.label || `Camera ${device.deviceId.slice(0, 5)}`
@@ -102,7 +102,7 @@ export function WebcamCaptureInterface({
     }
 
     void loadDevices()
-  }, [selectedDevice])
+  }, [])
 
   // Capture function (defined before use)
   const handleCapture = useCallback(() => {
@@ -219,7 +219,7 @@ export function WebcamCaptureInterface({
             <Monitor className="h-4 w-4" />
             Camera Device
           </h3>
-          <Select value={selectedDevice} onValueChange={setSelectedDevice}>
+          <Select value={selectedDevice || ''} onValueChange={setSelectedDevice}>
             <SelectTrigger>
               <SelectValue placeholder="Select camera" />
             </SelectTrigger>
