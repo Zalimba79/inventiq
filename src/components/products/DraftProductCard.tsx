@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePhotoLoader } from '@/hooks/usePhotoLoader'
-import { type Product } from '@/types/product'
+import { type Product } from '@/store/product-store'
 
 interface DraftProductCardProps {
   product: Product
@@ -32,7 +32,7 @@ export function DraftProductCard({
   onImageClick
 }: DraftProductCardProps): JSX.Element {
   const router = useRouter()
-  const primaryPhoto = product.photos.find(p => p.isPrimary) ?? product.photos[0]
+  const primaryPhoto = product.photos.find((p) => p.isPrimary) ?? product.photos[0]
   const { photo: loadedPhoto, isLoading } = usePhotoLoader(primaryPhoto ?? null)
   const [imageError, setImageError] = useState(false)
 

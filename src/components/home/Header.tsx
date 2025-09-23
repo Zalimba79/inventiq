@@ -77,7 +77,7 @@ export function Header({
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-semibold hidden md:block">Dashboard</h1>
               <Badge variant="secondary" className="hidden lg:inline-flex">
-                {user?.plan ?? 'Free'}
+                Free
               </Badge>
             </div>
           </div>

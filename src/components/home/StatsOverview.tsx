@@ -228,7 +228,7 @@ export function StatsOverview({
               {secondaryStats.map((stat, index) => (
                 <div key={`secondary-stat-${index}`} className="space-y-1">
                   <p className="text-2xl font-semibold">
-                    {formatValue(stat.value)}
+                    {stat.value}
                   </p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
