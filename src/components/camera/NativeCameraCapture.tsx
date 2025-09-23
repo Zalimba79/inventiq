@@ -2,7 +2,7 @@
 
 import { Camera, X, Check } from 'lucide-react'
 import Image from 'next/image'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -213,7 +213,7 @@ export function useNativeCameraSupport(): {
     reason: 'Checking device capabilities...'
   })
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkSupport = (): void => {
       const userAgent = navigator.userAgent
       const isIOS = /iPad|iPhone|iPod/.test(userAgent)

@@ -8,7 +8,7 @@ import {
   Info,
   AlertCircle
 } from 'lucide-react'
-import React, { useCallback, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import Webcam from 'react-webcam'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -58,7 +58,10 @@ export function WebcamCaptureInterface({
 
   // Get supported resolutions for selected camera
   const currentCamera = cameras.find(cam => cam.deviceId === selectedDevice)
-  const supportedResolutions = currentCamera?.supportedResolutions ?? []
+  const supportedResolutions = useMemo(
+    () => currentCamera?.supportedResolutions ?? [],
+    [currentCamera]
+  )
 
   // Update selected resolution when camera changes
   useEffect(() => {
@@ -74,7 +77,7 @@ export function WebcamCaptureInterface({
   }, [currentCamera, supportedResolutions])
 
   const videoConstraints = {
-    deviceId: selectedDevice || undefined,
+    deviceId: selectedDevice ?? undefined,
     width: selectedResolution?.width ?? 1920,
     height: selectedResolution?.height ?? 1080,
     aspectRatio: 16/9
@@ -219,7 +222,7 @@ export function WebcamCaptureInterface({
             <Monitor className="h-4 w-4" />
             Camera Device
           </h3>
-          <Select value={selectedDevice || ''} onValueChange={setSelectedDevice}>
+          <Select value={selectedDevice ?? ''} onValueChange={setSelectedDevice}>
             <SelectTrigger>
               <SelectValue placeholder="Select camera" />
             </SelectTrigger>
