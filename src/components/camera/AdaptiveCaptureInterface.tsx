@@ -11,7 +11,7 @@ import {
 } from '@/lib/fast-device-detection'
 
 import { IOSCaptureInterface } from './IosCaptureInterface'
-import { WebcamCaptureInterface } from './WebcamCaptureInterface'
+import { WebcamCaptureClean } from './WebcamCaptureClean'
 
 interface AdaptiveCaptureInterfaceProps {
   onCapture: (imageData: string) => void
@@ -74,7 +74,7 @@ export function AdaptiveCaptureInterface({
       )}
       
       {deviceType === 'desktop' && (
-        <WebcamCaptureInterface onCapture={onCapture} className={className} />
+        <WebcamCaptureClean onCapture={onCapture} className={className} />
       )}
     </div>
   )
