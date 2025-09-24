@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { SmartCaptureRouter } from '@/components/capture/SmartCaptureRouter'
+import { CameraPerformanceMonitor } from '@/components/debug/CameraPerformanceMonitor'
 import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor'
 import { Button } from '@/components/ui/button'
 import { useProductStore } from '@/store/product-store'
@@ -66,8 +67,9 @@ export default function CapturePage(): JSX.Element {
         />
       </div>
       
-      {/* Performance Monitor (development only) */}
+      {/* Performance Monitors (development only) */}
       <PerformanceMonitor />
+      <CameraPerformanceMonitor />
     </div>
   )
 }

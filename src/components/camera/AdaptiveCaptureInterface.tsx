@@ -1,15 +1,14 @@
 "use client"
 
 import { HelpCircle } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 import { Card } from '@/components/ui/card'
 import { 
-  deviceDetector, 
-  type DeviceType, 
-  type DeviceCapabilities 
-} from '@/lib/device-detection'
-import { checkCameraPermission } from '@/lib/safe-camera-access'
+  getDeviceType,
+  likelyHasCamera,
+  type DeviceType
+} from '@/lib/fast-device-detection'
 
 import { IOSCaptureInterface } from './IosCaptureInterface'
 import { WebcamCaptureInterface } from './WebcamCaptureInterface'
@@ -21,60 +20,25 @@ interface AdaptiveCaptureInterfaceProps {
 }
 
 /**
- * Adaptive capture interface that automatically selects
- * the best capture UI based on the detected device
+ * Adaptive capture interface with instant device detection
+ * - Zero loading state (synchronous detection)
+ * - Smooth interface switching
+ * - Optimized performance patterns
  */
 export function AdaptiveCaptureInterface({
   onCapture,
   className,
   forceDevice
 }: AdaptiveCaptureInterfaceProps): JSX.Element {
-  const [deviceType, setDeviceType] = useState<DeviceType>('unknown')
-  const [capabilities, setCapabilities] = useState<DeviceCapabilities | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const detectDevice = async (): Promise<void> => {
-      try {
-        // Check camera permission status first
-        const permissionStatus = await checkCameraPermission()
-        
-        // If permission is denied, skip device detection
-        if (permissionStatus === 'denied') {
-          setDeviceType('unknown')
-          setIsLoading(false)
-          return
-        }
-        
-        const caps = await deviceDetector.getCapabilities()
-        setCapabilities(caps)
-        setDeviceType(forceDevice ?? caps.type)
-      } catch (error) {
-        console.error('Error detecting device:', error)
-        setDeviceType('unknown')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void detectDevice()
-  }, [forceDevice])
+  // ⚡ INSTANT: Fast synchronous device detection - no camera access needed
+  const deviceType = forceDevice ?? getDeviceType()
+  const hasCamera = likelyHasCamera()
+  
+  // 🚀 PERFORMANCE: No loading state needed - detection is instant!
 
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50">
-        <Card className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Detecting device capabilities...</p>
-        </Card>
-      </div>
-    )
-  }
-
-  // Unknown device fallback
-  if (deviceType === 'unknown' || (capabilities && !capabilities.hasCamera)) {
+  // Unknown device or no camera fallback
+  if (deviceType === 'unknown' || !hasCamera) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-50">
         <Card className="p-8 text-center max-w-md">
@@ -110,27 +74,10 @@ export function AdaptiveCaptureInterface({
   )
 }
 
-// Export a hook for device info
-export function useDeviceInfo(): { type: DeviceType; capabilities: DeviceCapabilities | null } {
-  const [deviceInfo, setDeviceInfo] = useState<{
-    type: DeviceType
-    capabilities: DeviceCapabilities | null
-  }>({
-    type: 'unknown',
-    capabilities: null
-  })
-
-  useEffect(() => {
-    const loadDeviceInfo = async (): Promise<void> => {
-      const caps = await deviceDetector.getCapabilities()
-      setDeviceInfo({
-        type: caps.type,
-        capabilities: caps
-      })
-    }
-
-    void loadDeviceInfo()
-  }, [])
-
-  return deviceInfo
+// Export a hook for device info (fast version)
+export function useDeviceInfo(): { type: DeviceType; hasCamera: boolean } {
+  return {
+    type: getDeviceType(),
+    hasCamera: likelyHasCamera()
+  }
 }

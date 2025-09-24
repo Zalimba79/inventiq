@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
 import { AdaptiveCaptureInterface } from '@/components/camera/AdaptiveCaptureInterface'
+import { CameraErrorBoundary } from '@/components/camera/CameraErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { deviceDetector } from '@/lib/device-detection'
+import { fastDeviceDetector } from '@/lib/fast-device-detection'
 import { cn } from '@/lib/utils'
 
 export type CaptureMethod = 'dropzone' | 'mobile' | 'webcam' | 'auto'
@@ -73,13 +74,10 @@ export function SmartCaptureRouter({
     }
   }, [])
 
-  // Detect device type
+  // Fast synchronous device detection - no async needed!
   useEffect(() => {
-    const detectDevice = (): void => {
-      const type = deviceDetector.getDeviceType()
-      setDeviceType(type === 'ios' || type === 'android' ? 'mobile' : 'desktop')
-    }
-    detectDevice()
+    const type = fastDeviceDetector.getDeviceType()
+    setDeviceType(type === 'ios' || type === 'android' ? 'mobile' : 'desktop')
   }, [])
 
   // Auto-detect drag events (smart routing)
@@ -308,13 +306,15 @@ export function SmartCaptureRouter({
           </div>
         )}
 
-        {/* Camera Modes */}
+        {/* Camera Modes with Error Boundary */}
         {(activeMethod === 'mobile' || activeMethod === 'webcam') && !isDragging && (
-          <AdaptiveCaptureInterface 
-            onCapture={handleCameraCapture}
-            className="h-full"
-            forceDevice={activeMethod === 'mobile' ? 'ios' : 'desktop'}
-          />
+          <CameraErrorBoundary>
+            <AdaptiveCaptureInterface 
+              onCapture={handleCameraCapture}
+              className="h-full"
+              forceDevice={activeMethod === 'mobile' ? 'ios' : 'desktop'}
+            />
+          </CameraErrorBoundary>
         )}
       </div>
 
