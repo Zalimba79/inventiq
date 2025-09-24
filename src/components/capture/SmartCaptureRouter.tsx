@@ -1,11 +1,6 @@
 "use client"
 
-import { 
-  Upload, 
-  FolderOpen,
-  CheckCircle,
-  Package
-} from 'lucide-react'
+import { Upload, FolderOpen, CheckCircle, Package } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
@@ -14,13 +9,7 @@ import { CameraErrorBoundary } from '@/components/camera/CameraErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select'
 import { fastDeviceDetector } from '@/lib/fast-device-detection'
 import { cn } from '@/lib/utils'
 

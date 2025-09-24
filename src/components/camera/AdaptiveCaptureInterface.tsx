@@ -1,7 +1,7 @@
 "use client"
 
 import { HelpCircle } from 'lucide-react'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 import { Card } from '@/components/ui/card'
 import { 
@@ -30,15 +30,21 @@ export function AdaptiveCaptureInterface({
   className,
   forceDevice
 }: AdaptiveCaptureInterfaceProps): JSX.Element {
-  // ⚡ INSTANT: Fast synchronous device detection - no camera access needed
-  const deviceType = forceDevice ?? getDeviceType()
-  const hasCamera = likelyHasCamera()
+  // Use state to avoid hydration mismatch between server and client
+  const [deviceType, setDeviceType] = useState<DeviceType>('desktop')
+  const [hasCamera, setHasCamera] = useState(true)
+  const [isClient, setIsClient] = useState(false)
   
-  // 🚀 PERFORMANCE: No loading state needed - detection is instant!
+  // Run detection only on client to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+    setDeviceType(forceDevice ?? getDeviceType())
+    setHasCamera(likelyHasCamera())
+  }, [forceDevice])
 
 
-  // Unknown device or no camera fallback
-  if (deviceType === 'unknown' || !hasCamera) {
+  // Unknown device or no camera fallback (only show after client detection)
+  if (isClient && (deviceType === 'unknown' || !hasCamera)) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-50">
         <Card className="p-8 text-center max-w-md">

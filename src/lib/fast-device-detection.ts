@@ -22,6 +22,11 @@ class FastDeviceDetector {
     if (this.cachedType) {
       return this.cachedType
     }
+    
+    // Default to desktop for SSR (server-side rendering)
+    if (typeof window === 'undefined') {
+      return 'desktop'
+    }
 
     let type: DeviceType = 'unknown'
     
