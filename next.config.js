@@ -12,6 +12,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
       },
+      {
+        protocol: 'http',
+        hostname: '10.2.200.102',
+        port: '9000',
+        pathname: '/inventiq-assets/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '9000',
+        pathname: '/**',
+      },
     ],
   },
   // Allow hot reload from any origin during development

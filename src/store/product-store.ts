@@ -14,7 +14,9 @@ export type ProductStatus =
 
 export interface ProductPhoto {
   id: string
-  dataUrl?: string // Optional - loaded on demand from IndexedDB
+  dataUrl?: string // Optional - loaded on demand from IndexedDB or MinIO URL
+  url?: string // MinIO URL if uploaded
+  thumbnailUrl?: string // MinIO thumbnail URL if available
   mimeType: string
   size: number
   isPrimary: boolean
@@ -22,7 +24,7 @@ export interface ProductPhoto {
   timestamp: Date
   // New fields for hybrid storage
   isLoaded?: boolean
-  storageType?: 'localStorage' | 'indexedDB' // Optional for backward compatibility
+  storageType?: 'localStorage' | 'indexedDB' | 'minio' // Storage location
   originalSize?: number
   compressed?: boolean
 }
@@ -154,13 +156,30 @@ export const useProductStore = create<ProductStore>()(
       createProduct: async (photos, quantity = 1) => {
         await get().initializeStorage()
         
-        const productId = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        const productId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+        
+        console.log('📦 Creating product with photos:', photos.map(p => ({
+          hasUrl: !!p.url,
+          hasDataUrl: !!p.dataUrl,
+          storageType: p.storageType
+        })))
         
         // Process photos for hybrid storage
         const processedPhotos: ProductPhoto[] = []
         
         for (const photo of photos) {
-          if (photo.dataUrl) {
+          // If photo already has MinIO URL, just use it directly
+          if (photo.url && photo.storageType === 'minio') {
+            console.log('✅ Using existing MinIO photo:', photo.url)
+            processedPhotos.push({
+              ...photo,
+              isPrimary: photo.isPrimary || processedPhotos.length === 0,
+              timestamp: photo.timestamp || new Date()
+            })
+          } 
+          // Otherwise process dataUrl for local storage
+          else if (photo.dataUrl) {
+            console.log('💾 Processing dataUrl for local storage')
             const { photo: optimizedPhoto, photoData } = await get().optimizePhotoForStorage(photo.dataUrl)
             
             // Store large images in IndexedDB
@@ -207,18 +226,53 @@ export const useProductStore = create<ProductStore>()(
       
       deleteProduct: async (id) => {
         const product = get().getProduct(id)
+        console.log('🗑️ Deleting product:', id, product?.name || 'Unknown')
         
-        // Clean up photos from IndexedDB
-        if (product && imageDB) {
+        if (product) {
+          console.log(`📦 Product has ${product.photos.length} photos to delete`)
+          
+          // Clean up photos from different storage locations
           for (const photo of product.photos) {
-            if (photo.storageType === 'indexedDB') {
+            console.log('📸 Processing photo:', {
+              id: photo.id,
+              storageType: photo.storageType,
+              hasUrl: !!photo.url,
+              hasThumbnailUrl: !!photo.thumbnailUrl
+            })
+            
+            if (photo.storageType === 'indexedDB' && imageDB) {
               try {
                 await imageDB.removeItem('photos', photo.id)
+                console.log('✅ Deleted from IndexedDB')
               } catch (error) {
-                console.warn(`Failed to delete photo ${photo.id} from IndexedDB:`, error)
+                console.warn(`❌ Failed to delete photo ${photo.id} from IndexedDB:`, error)
               }
+            } else if ((photo.storageType === 'minio' || photo.url) && photo.url) {
+              // Delete main image from MinIO (thumbnail will be auto-deleted)
+              console.log('🌐 Deleting from MinIO:', photo.url)
+              try {
+                const response = await fetch('/api/upload/delete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: photo.url })
+                })
+                
+                if (!response.ok) {
+                  const error = await response.json()
+                  console.error(`❌ Failed to delete photo from MinIO:`, error)
+                } else {
+                  console.log(`✅ Successfully deleted from MinIO (thumbnail auto-deleted)`)
+                }
+              } catch (error) {
+                console.error(`❌ Failed to delete photo ${photo.id} from MinIO:`, error)
+              }
+            } else {
+              console.log('⚠️ Photo has no MinIO URL or unknown storage type:', photo)
             }
           }
+          console.log('✅ Photo deletion complete for product')
+        } else {
+          console.log('❌ Product not found for deletion:', id)
         }
         
         set((state) => ({
@@ -287,7 +341,7 @@ export const useProductStore = create<ProductStore>()(
           }
         }
         
-        const photoId = `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        const photoId = `photo_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
         const finalSize = estimateImageSize(finalDataUrl)
         
         const photo: ProductPhoto = {
@@ -316,12 +370,35 @@ export const useProductStore = create<ProductStore>()(
       },
       
       removePhotoFromProduct: async (productId, photoId) => {
-        // Clean up from IndexedDB first
-        if (imageDB) {
-          try {
-            await imageDB.removeItem('photos', photoId)
-          } catch (error) {
-            console.warn(`Failed to delete photo ${photoId} from IndexedDB:`, error)
+        const product = get().getProduct(productId)
+        const photo = product?.photos.find(p => p.id === photoId)
+        
+        if (photo) {
+          // Clean up from appropriate storage
+          if (photo.storageType === 'indexedDB' && imageDB) {
+            try {
+              await imageDB.removeItem('photos', photoId)
+            } catch (error) {
+              console.warn(`Failed to delete photo ${photoId} from IndexedDB:`, error)
+            }
+          } else if (photo.storageType === 'minio' && photo.url) {
+            // Delete from MinIO
+            try {
+              const response = await fetch('/api/upload/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: photo.url })
+              })
+              
+              if (!response.ok) {
+                const error = await response.json()
+                console.error(`Failed to delete photo from MinIO:`, error)
+              } else {
+                console.log(`Deleted photo from MinIO: ${photo.url}`)
+              }
+            } catch (error) {
+              console.error(`Failed to delete photo ${photoId} from MinIO:`, error)
+            }
           }
         }
         
@@ -604,6 +681,36 @@ export const useProductStore = create<ProductStore>()(
       },
       
       clearAllData: async () => {
+        const products = get().products
+        
+        // Delete all MinIO images first
+        const deletePromises: Promise<void>[] = []
+        for (const product of products) {
+          for (const photo of product.photos) {
+            if (photo.storageType === 'minio' && photo.url) {
+              deletePromises.push(
+                fetch('/api/upload/delete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: photo.url })
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    console.error(`Failed to delete ${photo.url}`)
+                  }
+                })
+                .catch(error => {
+                  console.error(`Error deleting ${photo.url}:`, error)
+                })
+              )
+            }
+          }
+        }
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises)
+        console.log(`Deleted ${deletePromises.length} images from MinIO`)
+        
         // Clear IndexedDB
         if (imageDB) {
           await imageDB.clear('photos')

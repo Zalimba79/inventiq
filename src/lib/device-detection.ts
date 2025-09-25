@@ -117,10 +117,10 @@ class DeviceDetector {
     }
     
     try {
-      // Import safe camera access utility
-      const { getCameraDevices } = await import('./safe-camera-access')
-      const devices = await getCameraDevices()
-      return devices.length > 0
+      // Check for camera devices directly
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(device => device.kind === 'videoinput')
+      return videoDevices.length > 0
     } catch {
       return false
     }

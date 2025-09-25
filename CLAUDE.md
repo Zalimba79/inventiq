@@ -15,7 +15,7 @@ Inventiq is an AI-powered inventory management system that helps users catalog a
 ## Key Features
 
 ### Core Workflow
-1. **Direct Photo Capture**: Take photos of products using webcam
+1. **Direct Photo Capture**: Take photos of products using webcam, mobilephone, Upload of Picture to a Product
 2. **Quantity Management**: Track quantity for each product
 3. **Product Organization**: Create draft products with photos
 4. **AI Analysis**: Automatic product identification using GPT-4 Vision
@@ -37,14 +37,15 @@ Inventiq is an AI-powered inventory management system that helps users catalog a
 - **Language**: TypeScript
 - **UI Library**: Tailwind CSS + shadcn/ui components
 - **State Management**: Zustand with persistence
-- **Camera**: react-webcam for photo capture
+- **Camera**: Studio capture interface with multi-resolution support
 - **Icons**: Lucide React
 
 ### Backend/API
 - **API Routes**: Next.js API routes
 - **AI Integration**: OpenAI GPT-4 Vision API
-- **Image Processing**: Base64 data URLs
+- **Image Processing**: Sharp for optimization, Base64 for local storage
 - **Database**: Prisma ORM (schema ready, not connected)
+- **Object Storage**: MinIO S3-compatible storage (Synology NAS) - FULLY INTEGRATED
 
 ## Project Structure
 ```
@@ -52,8 +53,12 @@ inventiq/
 ├── src/
 │   ├── app/                    # Next.js app router pages
 │   │   ├── api/                # API endpoints
-│   │   │   └── ai/            # AI analysis endpoints
-│   │   ├── capture/           # Photo capture page
+│   │   │   ├── ai/            # AI analysis endpoints
+│   │   │   ├── upload/        # MinIO upload endpoints
+│   │   │   └── storage/       # Storage management
+│   │   ├── capture/           # Photo capture pages
+│   │   │   ├── studio/        # Professional studio interface
+│   │   │   └── quick/         # Quick mobile capture
 │   │   ├── products/          # Product management pages
 │   │   │   ├── [id]/         # Product detail/edit page
 │   │   │   ├── draft/        # Draft products gallery
@@ -61,16 +66,22 @@ inventiq/
 │   │   │   └── confirmed/    # Confirmed products gallery
 │   │   └── page.tsx          # Dashboard/home page
 │   ├── components/
-│   │   ├── camera/           # Camera capture components
-│   │   ├── products/         # Product management components
+│   │   ├── studio/           # Studio capture components
+│   │   ├── capture/         # Capture UI components
+│   │   ├── products/        # Product management components
 │   │   ├── layout/          # Navigation components
 │   │   ├── ui/              # shadcn/ui components
 │   │   └── debug/           # Debug utilities
 │   ├── store/               # Zustand stores
-│   │   ├── product-store.ts # Product state management
-│   │   └── capture-store.ts # Capture session management
-│   ├── types/              # TypeScript definitions
-│   └── lib/               # Utilities and helpers
+│   │   └── product-store.ts # Product state with MinIO integration
+│   ├── hooks/               # Custom hooks
+│   │   └── useMinioUpload.ts # MinIO upload hook
+│   ├── lib/                # Utilities and helpers
+│   │   └── storage/         # MinIO client and config
+│   └── types/              # TypeScript definitions
+├── scripts/                # Utility scripts
+│   ├── list-minio-files.js # List MinIO contents
+│   └── setup-minio-buckets.js # Setup MinIO buckets
 ├── prisma/
 │   └── schema.prisma      # Database schema (ready to use)
 └── public/                # Static assets
@@ -123,15 +134,10 @@ npm run start      # Start production server
 ```
 
 ### Code Quality
-Status (Last Updated: 2025-09-23)
-- **ESLint Errors**: 0 errors, 0 warnings
-- **TypeScript Files**: 97 files
-- **Components**: 58 React components
-- **Pages**: 7 Next.js pages
-- **Dependencies**: 31 runtime, 30 dev
-- **Git Branch**: develop
-- **Uncommitted Changes**: 35 files
-
+```bash
+npm run lint       # Run ESLint
+npm run typecheck  # Run TypeScript checks
+```
 
 ### ESLint Configuration
 - **Strict TypeScript rules** for type safety
@@ -141,275 +147,14 @@ Status (Last Updated: 2025-09-23)
 - **React/Next.js best practices**
 - **Code complexity limits** (max 20 cyclomatic, max 15 cognitive)
 - **Function length limits** (max 200 lines per function)
-- Special overrides for camera components and Zustand stores
-
-### Code Quality
-Status (Last Updated: 2025-09-23)
-- **ESLint Errors**: 0 errors, 0 warnings
-- **TypeScript Files**: 97 files
-- **Components**: 58 React components
-- **Pages**: 7 Next.js pages
-- **Dependencies**: 31 runtime, 30 dev
-- **Git Branch**: develop
-- **Uncommitted Changes**: 35 files
 
 
-## Recent Improvements (2025-09-23)
-
-### Camera Resolution Enhancements
-- **4K Resolution Support**: Fixed image capture to preserve full resolution
-  - Added `forceScreenshotSourceSize={true}` to capture at stream resolution, not display size
-  - Updated compression limits to preserve 4K (3840×2160) instead of downscaling
-  - Increased compression threshold from 1MB to 2MB for better quality
-- **Camera Capability Detection**: Automatic detection of supported resolutions
-  - New `useCameraCapabilities` hook tests what resolutions each camera actually supports
-  - Resolution selector only shows resolutions the camera can capture
-  - Warning displayed when 4K is not supported by the selected camera
-  - Shows actual capture resolution in status display
-
-### Image Storage & Display Fixes
-- **IndexedDB Photo Loading**: Fixed photos not displaying on draft page
-  - Created `DraftProductCard` component with automatic photo loading
-  - Images >500KB stored in IndexedDB are now loaded on-demand
-  - Added loading states and proper error handling
-  - `usePhotoLoader` hook manages photo retrieval from appropriate storage
-
-### Dashboard Architecture Improvements
-- **Modular Dashboard Components**: Created new modular architecture
-  - `Header`: Standalone header with search and notifications
-  - `StatsOverview`: Enhanced statistics cards with progress indicators
-  - `StorageWidget`: Storage monitoring with visual warnings
-  - `TipsWidget`: Auto-rotating tips carousel
-  - `DashboardLayout`: Wrapper component with sidebar support
-
-### Web Standards Compliance
-- **Security Headers**: Disabled x-powered-by header in next.config.js
-- **CSS Best Practices**: Replaced inline styles with CSS classes
-- **Browser Compatibility**: Fixed text-size-adjust with proper vendor prefixes
-- **Next.js 14 Compliance**: Moved themeColor/viewport to separate viewport export
-- **Accessibility**: Added aria-labels to all icon-only buttons
-
-### Branding Improvements
-- **Logo Implementation**: Replaced Package icon with actual Inventiq logo in navigation
-  - Uses Next.js Image component for optimized loading
-  - 40x40px display size with priority loading
-  - Maintains icon-based navigation for mobile efficiency
-
-## Recent Refactorings (2025-09-22)
-
-### ESLint Compliance Improvements
-- **Complexity Reduction**: Extracted helper functions to reduce cognitive complexity
-  - `CameraView`: Split capture logic into `captureWithImageCapture` and `captureWithCanvas`
-  - `BulkProductValidation`: Created `ProductValidationCard` and `ProductActions` components
-  - `ProductValidation`: Extracted `ProductEditForm` and `ProductInfoDisplay`
-  - `confidence-scorer`: Split into multiple calculation functions
-  
-### TypeScript Type Safety
-- Removed all unsafe `any` types in critical areas
-- Fixed type assertions for JSON parsing
-- Proper typing for all component props and state
-- Replaced `Array#reduce` with safer alternatives
-
-### React Best Practices
-- Fixed all React Hook dependency arrays
-- Wrapped functions with `useCallback` for performance
-- Proper handling of async operations in effects
-- Removed circular dependencies
-
-### Next.js Optimizations
-- Replaced all `<img>` tags with Next.js `<Image>` components
-- Proper `fill` and `sizes` props for responsive images
-- Optimized image loading with lazy loading
-
-### Component Architecture (Original Refactoring)
-- **DirectPhotoCapture** split into 7 focused components:
-  - `PhotoCaptureContainer`: Context provider for capture workflow
-  - `PhotoCaptureHeader`: Header controls and settings
-  - `QuantitySelector`: Reusable quantity input component
-  - `PhotoGuideOverlay`: Photography tips overlay
-  - `CameraQuickActions`: Quick action buttons
-  - `PhotoPreviewStrip`: Photo thumbnail strip
-  - `DirectPhotoCaptureRefactored`: Main orchestration component
-
-### Configuration System (Unified)
-- `camera-config.ts`: Central camera configuration types
-- `useCameraConfiguration`: Hook for camera settings management
-- `UnifiedCameraSettings`: Single settings dialog component
 
 ## Key Components
 
 ### Dashboard Components
-- `ActivityFeed`: Recent activity timeline
-- `DashboardLayout`: Component
+- `HomePage`: Main dashboard orchestration component
 - `Header`: Top navigation with user menu and notifications
-- `HomePage`: Main dashboard orchestration component
-- `QuickActions`: Quick access buttons
-- `RecentCaptures`: Recent photo thumbnails
-- `StatsCard`: Dashboard statistics display
-- `StatsOverview`: Component
-- `StorageWidget`: Component
-- `TipsWidget`: Component
-
-### Camera Components
-- `AdaptiveCaptureInterface`: Component
-- `CameraControlButtons`: Component
-- `CameraControlsUi`: Component
-- `CameraPreview`: Component
-- `CameraProvider`: Component
-- `CameraQuickActions`: Component
-- `CameraSettings`: Unified camera configuration
-- `CameraSettingsDialog`: Component
-- `CameraViewRefactored`: Updated WebRTC camera integration
-- `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `IosCaptureInterface`: Component
-- `NativeCameraCapture`: Component
-- `PhotoCaptureContainer`: Component
-- `PhotoCaptureHeader`: Component
-- `PhotoGuideOverlay`: Component
-- `PhotoPreview`: Display captured photos
-- `PhotoPreviewStrip`: Component
-- `QuantitySelector`: Component
-- `UnifiedCameraSettings`: Component
-- `WebcamCaptureInterface`: Component
-
-### Product Components
-- `BulkProductValidation`: Validate multiple products
-- `DraftProductCard`: Component
-- `ImageLightbox`: Component
-- `ProductCard`: Component
-- `ProductGallery`: Display products with filtering
-- `ProductValidation`: Review and validate AI results
-- `ValidationHistory`: Component
-
-### UI Components
-- `alert`: shadcn/ui component
-- `avatar`: shadcn/ui component
-- `badge`: shadcn/ui component
-- `button`: shadcn/ui component
-- `card`: shadcn/ui component
-- `checkbox`: shadcn/ui component
-- `dialog`: shadcn/ui component
-- `dropdown-menu`: shadcn/ui component
-- `input`: shadcn/ui component
-- `label`: shadcn/ui component
-- ... and 7 more UI components
-
-
-### Dashboard Components
-- `ActivityFeed`: Recent activity timeline
-- `DashboardLayout`: Component
-- `Header`: Top navigation with user menu and notifications
-- `HomePage`: Main dashboard orchestration component
-- `QuickActions`: Quick access buttons
-- `RecentCaptures`: Recent photo thumbnails
-- `StatsCard`: Dashboard statistics display
-- `StatsOverview`: Component
-- `StorageWidget`: Component
-- `TipsWidget`: Component
-
-### Camera Components
-- `AdaptiveCaptureInterface`: Component
-- `CameraControlButtons`: Component
-- `CameraControlsUi`: Component
-- `CameraPreview`: Component
-- `CameraProvider`: Component
-- `CameraQuickActions`: Component
-- `CameraSettings`: Unified camera configuration
-- `CameraSettingsDialog`: Component
-- `CameraViewRefactored`: Updated WebRTC camera integration
-- `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `IosCaptureInterface`: Component
-- `NativeCameraCapture`: Component
-- `PhotoCaptureContainer`: Component
-- `PhotoCaptureHeader`: Component
-- `PhotoGuideOverlay`: Component
-- `PhotoPreview`: Display captured photos
-- `PhotoPreviewStrip`: Component
-- `QuantitySelector`: Component
-- `UnifiedCameraSettings`: Component
-- `WebcamCaptureInterface`: Component
-
-### Product Components
-- `BulkProductValidation`: Validate multiple products
-- `ImageLightbox`: Component
-- `ProductCard`: Component
-- `ProductGallery`: Display products with filtering
-- `ProductValidation`: Review and validate AI results
-- `ValidationHistory`: Component
-
-### UI Components
-- `avatar`: shadcn/ui component
-- `badge`: shadcn/ui component
-- `button`: shadcn/ui component
-- `card`: shadcn/ui component
-- `checkbox`: shadcn/ui component
-- `dialog`: shadcn/ui component
-- `dropdown-menu`: shadcn/ui component
-- `input`: shadcn/ui component
-- `label`: shadcn/ui component
-- `progress`: shadcn/ui component
-- ... and 6 more UI components
-
-
-### Dashboard Components
-- `ActivityFeed`: Recent activity timeline
-- `DashboardLayout`: Component
-- `Header`: Top navigation with user menu and notifications
-- `HomePage`: Main dashboard orchestration component
-- `QuickActions`: Quick access buttons
-- `RecentCaptures`: Recent photo thumbnails
-- `StatsCard`: Dashboard statistics display
-- `StatsOverview`: Component
-- `StorageWidget`: Component
-- `TipsWidget`: Component
-
-### Camera Components
-- `AdaptiveCaptureInterface`: Component
-- `CameraControlButtons`: Component
-- `CameraControlsUi`: Component
-- `CameraPreview`: Component
-- `CameraProvider`: Component
-- `CameraQuickActions`: Component
-- `CameraSettings`: Unified camera configuration
-- `CameraSettingsDialog`: Component
-- `CameraViewRefactored`: Updated WebRTC camera integration
-- `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `IosCaptureInterface`: Component
-- `NativeCameraCapture`: Component
-- `PhotoCaptureContainer`: Component
-- `PhotoCaptureHeader`: Component
-- `PhotoGuideOverlay`: Component
-- `PhotoPreview`: Display captured photos
-- `PhotoPreviewStrip`: Component
-- `QuantitySelector`: Component
-- `UnifiedCameraSettings`: Component
-- `WebcamCaptureInterface`: Component
-
-### Product Components
-- `BulkProductValidation`: Validate multiple products
-- `ImageLightbox`: Component
-- `ProductCard`: Component
-- `ProductGallery`: Display products with filtering
-- `ProductValidation`: Review and validate AI results
-- `ValidationHistory`: Component
-
-### UI Components
-- `avatar`: shadcn/ui component
-- `badge`: shadcn/ui component
-- `button`: shadcn/ui component
-- `card`: shadcn/ui component
-- `checkbox`: shadcn/ui component
-- `dialog`: shadcn/ui component
-- `dropdown-menu`: shadcn/ui component
-- `input`: shadcn/ui component
-- `label`: shadcn/ui component
-- `progress`: shadcn/ui component
-- ... and 6 more UI components
-
-
-### Dashboard Components (Modular Architecture)
-- `HomePage`: Main dashboard orchestration component
-- `Header`: Standalone header with search and user menu
 - `StatsOverview`: Enhanced statistics display with progress bars
 - `QuickActions`: Animated quick access cards with real-time stats
 - `RecentCaptures`: Recent photo thumbnails grid
@@ -418,64 +163,16 @@ Status (Last Updated: 2025-09-23)
 - `TipsWidget`: Auto-rotating tips carousel
 - `DashboardLayout`: Wrapper component with sidebar support
 
-### Camera Components
-- `CameraControlButtons`: Component
-- `CameraControlsUi`: Component
-- `CameraPreview`: Component
-- `CameraProvider`: Component
-- `CameraQuickActions`: Component
-- `CameraSettings`: Unified camera configuration
-- `CameraSettingsDialog`: Component
-- `CameraViewRefactored`: Updated WebRTC camera integration
-- `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `PhotoCaptureContainer`: Component
-- `PhotoCaptureHeader`: Component
-- `PhotoGuideOverlay`: Component
-- `PhotoPreview`: Display captured photos
-- `PhotoPreviewStrip`: Component
-- `QuantitySelector`: Component
-- `UnifiedCameraSettings`: Component
-
-### Product Components
-- `BulkProductValidation`: Validate multiple products
-- `ImageLightbox`: Component
-- `ProductCard`: Component
-- `ProductGallery`: Display products with filtering
-- `ProductValidation`: Review and validate AI results
-- `ValidationHistory`: Component
-
-### UI Components
-- `avatar`: shadcn/ui component
-- `badge`: shadcn/ui component
-- `button`: shadcn/ui component
-- `card`: shadcn/ui component
-- `checkbox`: shadcn/ui component
-- `dialog`: shadcn/ui component
-- `dropdown-menu`: shadcn/ui component
-- `input`: shadcn/ui component
-- `label`: shadcn/ui component
-- `progress`: shadcn/ui component
-- ... and 6 more UI components
-
-
-### Dashboard Components (New Architecture)
-- `HomePage`: Main dashboard orchestration component
-- `Header`: Top navigation with user menu and notifications
-- `StatsCard`: Dashboard statistics display
-- `RecentCaptures`: Recent photo thumbnails
-- `QuickActions`: Quick access buttons
-- `ActivityFeed`: Recent activity timeline
-
-### Camera Components
-- `DirectPhotoCaptureRefactored`: Refactored main capture interface
-- `CameraViewRefactored`: Updated WebRTC camera integration
-- `PhotoPreview`: Display captured photos
-- `CameraSettings`: Unified camera configuration
+### Capture Components
+- `SmartCaptureRouter`: Smart routing for different capture methods (dropzone/camera)
+- `SimpleCameraCapture`: Minimal camera capture interface
 
 ### Product Components
 - `ProductGallery`: Display products with filtering
 - `ProductValidation`: Review and validate AI results
 - `BulkProductValidation`: Validate multiple products
+- `DraftProductCard`: Product card with automatic photo loading
+- `ImageLightbox`: Full-screen image viewer
 
 ### Navigation
 - `Navigation`: Top navigation bar with Inventiq logo and main menu
@@ -487,33 +184,46 @@ Status (Last Updated: 2025-09-23)
 - Overview statistics
 - Quick actions
 - Workflow progress visualization
-- Clear storage option
+- Storage monitoring
 
-### 2. Capture (`/capture`)
-- Direct photo capture
-- Quantity setting
-- Create products immediately
-- No intermediate organize step
+### 2. Capture Hub (`/capture`)
+- Three capture options:
+  - **Studio Capture**: Professional multi-angle capture
+  - **Quick Capture**: Fast mobile-optimized capture
+  - **File Upload**: Import existing photos
 
-### 3. Draft Products (`/products/draft`)
+### 3. Studio Capture (`/capture/studio`)
+- Professional capture interface
+- Camera selection and resolution control
+- Live preview with guides
+- Automatic MinIO upload
+- Batch capture and save
+
+### 4. Quick Capture (`/capture/quick`)
+- Mobile-optimized interface
+- Native camera integration
+- Fast single-photo capture
+- Direct product creation
+
+### 5. Draft Products (`/products/draft`)
 - View all draft products
 - Click to edit details
 - Select for AI analysis
-- Delete products
+- Delete products (with MinIO cleanup)
 - Add more photos
 
-### 4. Product Detail (`/products/[id]`)
+### 6. Product Detail (`/products/[id]`)
 - Edit product name and quantity
 - Manage photos (set primary, delete)
 - Add more photos to product
 - Save and return to draft
 
-### 5. Validation (`/products/validation`)
+### 7. Validation (`/products/validation`)
 - Review AI-analyzed products
 - Edit details before confirming
 - Bulk validation option
 
-### 6. Confirmed (`/products/confirmed`)
+### 8. Confirmed (`/products/confirmed`)
 - Final inventory catalog
 - Search and filter
 - Export to CSV
@@ -545,14 +255,27 @@ Response: {
 
 ## Storage Management
 
-### LocalStorage Keys
-- `product-storage`: Product data and state
-- `capture-storage`: Current capture session
+### Storage Architecture (IMPLEMENTED)
+- **MinIO S3**: Primary image storage on Synology NAS
+  - Main images: `inventiq-assets/products/`
+  - Thumbnails: `inventiq-assets/thumbnails/`
+  - Automatic thumbnail generation (300x300)
+  - Automatic cleanup on product deletion
+- **IndexedDB**: Fallback for large local images (>500KB)
+- **LocalStorage**: Product metadata and small images
 
-### Storage Optimization
-- Images stored at 800x600, 70% JPEG quality
-- Automatic compression on capture
-- Clear storage button on dashboard
+### MinIO Integration
+- **Upload**: Automatic during studio capture
+- **URLs**: Direct access via `http://10.2.200.102:9000`
+- **Deletion**: Cascade delete (main image + thumbnail)
+- **Optimization**: Sharp library for image processing
+
+### Storage Flow
+1. **Capture**: Image captured in Studio/Quick mode
+2. **Upload**: Automatically uploaded to MinIO
+3. **Storage**: URL saved in product, dataUrl kept for preview
+4. **Access**: Direct URL access for display
+5. **Deletion**: Automatic cleanup of both main and thumbnail
 
 ## Known Issues & Solutions
 
@@ -564,33 +287,23 @@ Response: {
 - **Required**: Browser camera access permission
 - **Fallback**: Error message with retry option
 
-### Latest Refactoring (2025-09-22 - Session 2)
-Major refactoring to achieve 0 ESLint errors:
-- **ProductCard Component Extraction**: Split ProductGallery complexity by extracting ProductCard
-- **TypeScript Improvements**: Fixed all `any` types with proper interfaces
-- **React Hook Compliance**: Fixed all useEffect dependency arrays
-- **Accessibility Fixes**: Added proper ARIA roles and labels
-- **Pre-commit Hook Update**: Modified to allow warnings but block errors
 
-### Remaining Warnings (Non-blocking)
-- Long functions in page components (>200 lines) - requires component splitting
-- Missing return type annotations on many functions
-- CameraView component length (455 lines)
-- Product store length (414 lines)
-- Some array index keys and security warnings
+## Recent Updates
 
-To check current status: `npm run lint`
+### ✅ Completed Features
+- **MinIO S3 Storage**: Fully integrated with automatic upload/delete
+- **Studio Capture Interface**: Professional multi-angle capture
+- **Smart Image Deletion**: Automatic thumbnail cleanup
+- **Hybrid Storage**: MinIO for cloud, IndexedDB for large local files
 
-## Future Enhancements
-
-### Planned Features
+### 🚀 Future Enhancements
 1. Connect PostgreSQL database
-2. Cloud image storage (S3/Cloudinary)
-3. User authentication
-4. Export/import functionality
-5. Barcode scanning
-6. Multi-language support
-7. Mobile app version
+2. User authentication (NextAuth.js)
+3. Export/import functionality
+4. Barcode/QR code scanning
+5. Multi-language support
+6. Mobile app version (React Native)
+7. Bulk import from Excel/CSV
 
 ### Database Migration
 ```bash
@@ -628,6 +341,14 @@ Create `.env.local`:
 # OpenAI API
 OPENAI_API_KEY=your_api_key_here
 
+# MinIO Storage (S3-compatible)
+S3_ENDPOINT=http://10.2.200.102:9000
+S3_BUCKET=inventiq
+S3_REGION=us-east-1
+S3_ACCESS_KEY=your_access_key
+S3_SECRET_KEY=your_secret_key
+S3_PUBLIC_URL=http://10.2.200.102:9000
+
 # Database (when ready)
 DATABASE_URL=postgresql://user:password@localhost:5432/inventiq
 
@@ -658,27 +379,10 @@ DRAFT → QUEUED → ANALYZING → ANALYZED → VALIDATED → CONFIRMED
 
 ## Important Notes
 
-- All data currently stored in browser localStorage
-- Images are base64 encoded (uses significant storage)
-- AI analysis requires OpenAI API key
-- Responsive design for mobile and desktop
-- Real-time updates without page refresh
-
-## Code Quality
-Status (Last Updated: 2025-09-23)
-- **ESLint Errors**: 0 errors, 0 warnings
-- **TypeScript Files**: 97 files
-- **Components**: 58 React components
-- **Pages**: 7 Next.js pages
-- **Dependencies**: 31 runtime, 30 dev
-- **Git Branch**: develop
-- **Uncommitted Changes**: 35 files
-
-
-
-
-<!-- AUTO-GENERATED STATS - DO NOT EDIT MANUALLY -->
-<!-- Last Updated: 2025-09-23 -->
-<!-- Branch: develop -->
-<!-- ESLint: 0 errors, 0 warnings -->
-<!-- Components: 58 files -->
+- **Hybrid Storage**: MinIO for cloud storage, localStorage/IndexedDB for offline
+- **Image Storage**: Automatically uploaded to MinIO with thumbnails
+- **AI Analysis**: Requires OpenAI API key for GPT-4 Vision
+- **Responsive Design**: Optimized for both mobile and desktop
+- **Real-time Updates**: Hot reload without page refresh
+- **Auto-cleanup**: Images deleted from MinIO when products deleted
+- **Professional Capture**: Studio interface with guides and batch capture

@@ -1,6 +1,7 @@
 # Inventiq - AI-Powered Inventory Management
 
 ## Project Overview
+For contributor guidelines see [AGENTS.md](AGENTS.md).
 Inventiq is a web application for intelligent product inventory management through multi-angle photography and AI-powered product identification.
 
 ## Core Features
