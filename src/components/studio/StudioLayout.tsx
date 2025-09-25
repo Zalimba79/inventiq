@@ -3,12 +3,14 @@
 import React, { useState, useRef } from 'react'
 
 import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
+import { CameraPreview, type CameraPreviewRef } from './CameraPreview'
 import { CameraSelector } from './CameraSelector'
-import { QuickResolutionSelector } from './QuickResolutionSelector'
-import { CameraPreview, CameraPreviewRef } from './CameraPreview'
 import { CaptureControls } from './CaptureControls'
 import { CapturedImages } from './CapturedImages'
-import { cn } from '@/lib/utils'
+import { QuickResolutionSelector } from './QuickResolutionSelector'
+
 
 interface CapturedImage {
   id: string

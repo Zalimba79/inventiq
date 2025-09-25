@@ -1,7 +1,8 @@
-import { deleteImage, isMinIOConfigured } from '@/lib/storage/minio'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
-export async function DELETE(request: NextRequest) {
+import { deleteImage, isMinIOConfigured } from '@/lib/storage/minio'
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     // Check if MinIO is configured
     if (!isMinIOConfigured()) {
@@ -40,7 +41,7 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Check if MinIO is configured
     if (!isMinIOConfigured()) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
+    const body = await request.json() as { url: string }
     const { url } = body
     
     console.log('Delete request received for URL:', url)

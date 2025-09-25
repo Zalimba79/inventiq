@@ -7,6 +7,7 @@ import {
   ListObjectsV2Command,
   DeleteObjectsCommand
 } from '@aws-sdk/client-s3'
+
 import { BUCKET_CONFIG, BucketType } from './bucket-config'
 
 // MinIO Client
@@ -143,9 +144,9 @@ export async function initializeMinIO(): Promise<{
   
   const allSuccess = Object.values(results).every(r => r)
   
-  console.log('\n' + (allSuccess 
+  console.log(`\n${  allSuccess 
     ? '✅ MinIO initialization complete! All buckets ready.' 
-    : '⚠️  MinIO initialization completed with errors')
+    : '⚠️  MinIO initialization completed with errors'}`
   )
   
   return {

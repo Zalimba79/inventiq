@@ -1,14 +1,16 @@
 "use client"
 
 import React, { useState, useRef } from 'react'
-import { useMinioUpload } from '@/hooks/useMinioUpload'
 
-import { TopToolbar } from './TopToolbar'
+import { useMinioUpload } from '@/hooks/useMinioUpload'
+import { cn } from '@/lib/utils'
+
+import { BottomBar } from './BottomBar'
+import { CameraPreview, type CameraPreviewRef } from './CameraPreview'
 import { LeftSidebar } from './LeftSidebar'
 import { RightSidebar } from './RightSidebar'
-import { BottomBar } from './BottomBar'
-import { CameraPreview, CameraPreviewRef } from './CameraPreview'
-import { cn } from '@/lib/utils'
+import { TopToolbar } from './TopToolbar'
+
 
 interface CapturedImage {
   id: string
@@ -132,7 +134,7 @@ export function StudioLayoutV2({
     // Delete all images from MinIO
     const deletePromises = capturedImages
       .filter(img => img.url)
-      .map(img => deleteImage(img.url!))
+      .map(async img => deleteImage(img.url!))
     
     await Promise.all(deletePromises)
     

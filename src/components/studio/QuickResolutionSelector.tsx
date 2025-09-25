@@ -64,7 +64,7 @@ export function QuickResolutionSelector({
         const capabilities = track.getCapabilities ? track.getCapabilities() : null
         const settings = track.getSettings()
         
-        if (capabilities && capabilities.width && capabilities.height) {
+        if (capabilities?.width && capabilities.height) {
           // Use actual max from capabilities
           setMaxResolution({
             width: capabilities.width.max || settings.width || 1920,

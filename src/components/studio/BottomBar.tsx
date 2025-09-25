@@ -1,8 +1,8 @@
 "use client"
 
-import React from 'react'
 import { Play, Square, SkipBack, SkipForward, Camera, Trash2, Save, FolderOpen } from 'lucide-react'
 import Image from 'next/image'
+import React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'

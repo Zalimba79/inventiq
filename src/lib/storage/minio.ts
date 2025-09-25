@@ -7,6 +7,7 @@ import {
   HeadBucketCommand 
 } from '@aws-sdk/client-s3'
 import sharp from 'sharp'
+
 import { BUCKET_CONFIG, BucketType, getObjectPath } from './bucket-config'
 
 // MinIO Client Configuration
@@ -59,7 +60,7 @@ export async function uploadProductImage(
   const { optimize = true, maxWidth = 1920, quality = 85, generateThumbnail = true } = options || {}
   
   let processedBuffer = file
-  let contentType = 'image/jpeg'
+  const contentType = 'image/jpeg'
   
   // Optimize main image with sharp if needed
   if (optimize) {
@@ -194,11 +195,15 @@ export async function deleteImage(url: string): Promise<void> {
     console.log('MinIO delete successful:', { bucket, key })
     
     // Also try to delete thumbnail if it exists
-    if (key.includes('/products/')) {
-      // Replace products folder with thumbnails and add thumb- prefix to filename
+    if (key.includes('products/')) {
+      // Transform the key to match thumbnail pattern
+      // products/product-XXX/TIMESTAMP-capture-TIMESTAMP2.jpg 
+      // -> thumbnails/product-XXX/TIMESTAMP-thumb-capture-TIMESTAMP2.jpg
       const thumbKey = key
         .replace('products/', 'thumbnails/')
-        .replace(/\/(\d+)-/, '/$1-thumb-') // Add thumb- after timestamp
+        .replace(/\/(\d+)-capture-/, '/$1-thumb-capture-') // Insert thumb- before capture-
+      
+      console.log('Attempting to delete thumbnail:', { original: key, thumbnail: thumbKey })
       
       try {
         await client.send(new DeleteObjectCommand({

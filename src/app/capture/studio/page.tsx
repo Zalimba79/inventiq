@@ -1,8 +1,18 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
+
 import { StudioLayoutV2 } from '@/components/studio/StudioLayoutV2'
 import { useProductStore } from '@/store/product-store'
+
+interface StudioImage {
+  id?: string
+  dataUrl?: string
+  url?: string
+  thumbnailUrl?: string
+  uploadStatus?: string
+  timestamp: Date
+}
 
 /**
  * Studio Capture Page
@@ -12,7 +22,7 @@ export default function StudioPage(): JSX.Element {
   const router = useRouter()
   const { createProduct } = useProductStore()
   
-  const handleSave = (images: any[]) => {
+  const handleSave = (images: StudioImage[]): void => {
     // Create product with captured images
     console.log('🎬 Studio handleSave called with images:', images)
     
@@ -29,9 +39,9 @@ export default function StudioPage(): JSX.Element {
         
         return {
           id: img.id || crypto.randomUUID(), // Use original ID if available
-          dataUrl: img.dataUrl, // Keep dataUrl for backward compatibility
-          url: img.url, // Add MinIO URL if available
-          thumbnailUrl: img.thumbnailUrl, // Add thumbnail URL if available
+          dataUrl: img.url ? undefined : img.dataUrl, // Don't store dataUrl if we have MinIO URL
+          url: img.url, // MinIO URL if available
+          thumbnailUrl: img.thumbnailUrl, // MinIO thumbnail URL if available
           mimeType: 'image/jpeg',
           size: img.url ? 100000 : (img.dataUrl?.length || 0) * 0.75,
           isPrimary: index === 0,

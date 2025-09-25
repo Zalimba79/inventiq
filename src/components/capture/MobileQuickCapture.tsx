@@ -1,16 +1,16 @@
 "use client"
 
-import React, { useState, useRef, ChangeEvent } from 'react'
 import { Camera, X, Check, Plus, Package } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import React, { useState, useRef, type ChangeEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useProductStore } from '@/store/product-store'
 import { cn } from '@/lib/utils'
+import { useProductStore } from '@/store/product-store'
 
 interface CapturedImage {
   id: string

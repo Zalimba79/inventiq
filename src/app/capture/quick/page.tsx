@@ -3,8 +3,8 @@
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
-import { Button } from '@/components/ui/button'
 import { MobileQuickCapture } from '@/components/capture/MobileQuickCapture'
+import { Button } from '@/components/ui/button'
 
 /**
  * Quick Capture Page

@@ -85,7 +85,7 @@ export function ResolutionSelector({
       
       // Wait for all tests to complete
       const results = await Promise.all(testPromises)
-      const supported = results.filter(r => r !== null) as Resolution[]
+      const supported = results.filter(r => r !== null)
       
       // Sort by resolution (highest first)
       supported.sort((a, b) => (b.width * b.height) - (a.width * a.height))

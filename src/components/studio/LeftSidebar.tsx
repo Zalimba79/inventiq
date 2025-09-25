@@ -1,15 +1,17 @@
 "use client"
 
-import React from 'react'
 import { Camera, Sliders, Lightbulb, Grid3x3, Move, Circle, RotateCw } from 'lucide-react'
+import React from 'react'
 
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
 import { CameraSelector } from './CameraSelector'
 import { UltraQuickResolutionSelector } from './UltraQuickResolutionSelector'
-import { cn } from '@/lib/utils'
+
 
 interface LeftSidebarProps {
   onCameraChange: (deviceId: string) => void

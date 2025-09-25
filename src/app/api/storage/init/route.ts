@@ -1,5 +1,6 @@
-import { initializeMinIO, getBucketStats } from '@/lib/storage/minio-init'
 import { NextResponse } from 'next/server'
+
+import { initializeMinIO, getBucketStats } from '@/lib/storage/minio-init'
 
 /**
  * Initialize all MinIO buckets with proper structure

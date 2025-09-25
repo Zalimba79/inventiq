@@ -45,7 +45,8 @@ export function DraftProductCard({
     router.push(`/products/${product.id}`)
   }
 
-  const imageDataUrl = loadedPhoto?.dataUrl ?? primaryPhoto?.dataUrl
+  // Use MinIO URL if available, otherwise fallback to dataUrl
+  const imageUrl = primaryPhoto?.url ?? loadedPhoto?.dataUrl ?? primaryPhoto?.dataUrl
 
   if (viewMode === 'grid') {
     return (
@@ -76,16 +77,16 @@ export function DraftProductCard({
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation()
-              if (imageDataUrl && !imageError) {
-                onImageClick(imageDataUrl, product.name ?? 'Product')
+              if (imageUrl && !imageError) {
+                onImageClick(imageUrl, product.name ?? 'Product')
               }
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 e.stopPropagation()
-                if (imageDataUrl && !imageError) {
-                  onImageClick(imageDataUrl, product.name ?? 'Product')
+                if (imageUrl && !imageError) {
+                  onImageClick(imageUrl, product.name ?? 'Product')
                 }
               }
             }}
@@ -94,10 +95,10 @@ export function DraftProductCard({
               <div className="w-full h-full flex items-center justify-center bg-muted">
                 <div className="text-muted-foreground text-xs">Loading...</div>
               </div>
-            ) : imageDataUrl && !imageError ? (
+            ) : imageUrl && !imageError ? (
               <>
                 <Image
-                  src={imageDataUrl}
+                  src={imageUrl}
                   alt="Product"
                   fill
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
@@ -190,16 +191,16 @@ export function DraftProductCard({
         tabIndex={0}
         onClick={(e) => {
           e.stopPropagation()
-          if (imageDataUrl && !imageError) {
-            onImageClick(imageDataUrl, product.name ?? 'Product')
+          if (imageUrl && !imageError) {
+            onImageClick(imageUrl, product.name ?? 'Product')
           }
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
             e.stopPropagation()
-            if (imageDataUrl && !imageError) {
-              onImageClick(imageDataUrl, product.name ?? 'Product')
+            if (imageUrl && !imageError) {
+              onImageClick(imageUrl, product.name ?? 'Product')
             }
           }
         }}
@@ -208,10 +209,10 @@ export function DraftProductCard({
           <div className="w-full h-full flex items-center justify-center bg-muted">
             <div className="text-muted-foreground text-xs">...</div>
           </div>
-        ) : imageDataUrl && !imageError ? (
+        ) : imageUrl && !imageError ? (
           <>
             <Image
-              src={imageDataUrl}
+              src={imageUrl}
               alt="Product"
               width={80}
               height={80}

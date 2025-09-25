@@ -1,7 +1,8 @@
-import { uploadProductImage, uploadBase64Image, isMinIOConfigured } from '@/lib/storage/minio'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+import { uploadProductImage, uploadBase64Image, isMinIOConfigured } from '@/lib/storage/minio'
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Check if MinIO is configured
     if (!isMinIOConfigured()) {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Handle JSON upload (base64 data)
     if (contentType.includes('application/json')) {
       const body = await request.json()
-      const { productId, base64Data, filename } = body
+      const { productId, base64Data, filename } = body as { productId: string; base64Data: string; filename?: string }
       
       if (!productId || !base64Data) {
         return NextResponse.json(

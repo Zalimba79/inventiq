@@ -1,21 +1,6 @@
-#!/usr/bin/env node
-
-/**
- * Clean up orphaned thumbnails in MinIO
- */
-
+import 'dotenv/config'
 import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3'
-import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'path'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-// Load environment variables
-dotenv.config({ path: resolve(__dirname, '../.env.local') })
-
-// MinIO client configuration
 const client = new S3Client({
   endpoint: process.env.S3_ENDPOINT,
   region: process.env.S3_REGION || 'us-east-1',
@@ -23,80 +8,81 @@ const client = new S3Client({
     accessKeyId: process.env.S3_ACCESS_KEY,
     secretAccessKey: process.env.S3_SECRET_KEY
   },
-  forcePathStyle: true
+  forcePathStyle: true,
+  tls: false
 })
 
-async function deleteOrphanedThumbnails() {
-  const bucketName = 'inventiq-assets'
-  
-  console.log('🧹 Cleaning up orphaned thumbnails...')
-  console.log('='.repeat(50))
-  
-  // List all objects
-  const response = await client.send(new ListObjectsV2Command({
-    Bucket: bucketName,
-    MaxKeys: 1000
-  }))
-  
-  if (!response.Contents || response.Contents.length === 0) {
-    console.log('Bucket is empty')
-    return
-  }
-  
-  const thumbnails = []
-  const products = []
-  
-  // Categorize files
-  response.Contents.forEach(obj => {
-    if (obj.Key.includes('thumbnails/')) {
-      thumbnails.push(obj.Key)
-    } else if (obj.Key.includes('products/')) {
-      products.push(obj.Key)
+async function cleanupOrphanedThumbnails() {
+  try {
+    const bucket = process.env.S3_BUCKET || 'inventiq-assets'
+    
+    // List all files in thumbnails folder
+    const thumbnailsResponse = await client.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: 'thumbnails/'
+    }))
+    
+    const thumbnails = thumbnailsResponse.Contents || []
+    console.log(`Found ${thumbnails.length} thumbnails`)
+    
+    // List all files in products folder
+    const productsResponse = await client.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: 'products/'
+    }))
+    
+    const products = productsResponse.Contents || []
+    console.log(`Found ${products.length} product images`)
+    
+    // Create a set of expected thumbnail keys
+    const expectedThumbnails = new Set()
+    products.forEach(product => {
+      // Transform product key to expected thumbnail key
+      const thumbKey = product.Key
+        .replace('products/', 'thumbnails/')
+        .replace(/\/(\d+)-capture-/, '/$1-thumb-capture-')
+      expectedThumbnails.add(thumbKey)
+    })
+    
+    console.log(`
+Expecting ${expectedThumbnails.size} thumbnails based on products`)
+    
+    // Find orphaned thumbnails
+    const orphaned = thumbnails.filter(thumb => !expectedThumbnails.has(thumb.Key))
+    
+    if (orphaned.length === 0) {
+      console.log('✅ No orphaned thumbnails found!')
+      return
     }
-  })
-  
-  console.log(`Found ${thumbnails.length} thumbnails`)
-  console.log(`Found ${products.length} product images`)
-  
-  // Find orphaned thumbnails
-  const orphaned = []
-  thumbnails.forEach(thumbKey => {
-    // Extract product ID from thumbnail path
-    const match = thumbKey.match(/thumbnails\/(product-\d+)\//)
-    if (match) {
-      const productId = match[1]
-      // Check if there's a corresponding product image
-      const hasProduct = products.some(p => p.includes(productId))
-      if (!hasProduct) {
-        orphaned.push(thumbKey)
+    
+    console.log(`
+Found ${orphaned.length} orphaned thumbnails:`)
+    orphaned.forEach(thumb => {
+      console.log(`  - ${thumb.Key} (${(thumb.Size / 1024).toFixed(2)} KB)`)
+    })
+    
+    // Delete orphaned thumbnails
+    console.log('
+Deleting orphaned thumbnails...')
+    
+    for (const thumb of orphaned) {
+      try {
+        await client.send(new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: thumb.Key
+        }))
+        console.log(`✅ Deleted: ${thumb.Key}`)
+      } catch (error) {
+        console.error(`❌ Failed to delete ${thumb.Key}:`, error.message)
       }
     }
-  })
-  
-  if (orphaned.length === 0) {
-    console.log('✅ No orphaned thumbnails found')
-    return
+    
+    console.log('
+✅ Cleanup complete!')
+    
+  } catch (error) {
+    console.error('Error:', error)
   }
-  
-  console.log(`\n⚠️  Found ${orphaned.length} orphaned thumbnails:`)
-  orphaned.forEach(key => console.log(`   - ${key}`))
-  
-  // Delete orphaned thumbnails
-  console.log('\n🗑️  Deleting orphaned thumbnails...')
-  
-  for (const key of orphaned) {
-    try {
-      await client.send(new DeleteObjectCommand({
-        Bucket: bucketName,
-        Key: key
-      }))
-      console.log(`   ✅ Deleted: ${key}`)
-    } catch (error) {
-      console.error(`   ❌ Failed to delete ${key}:`, error.message)
-    }
-  }
-  
-  console.log('\n✅ Cleanup complete!')
 }
 
-deleteOrphanedThumbnails().catch(console.error)
+cleanupOrphanedThumbnails()
