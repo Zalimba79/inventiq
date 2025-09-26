@@ -1,0 +1,57 @@
+#!/bin/sh
+
+echo "🔄 Running pre-commit hooks..."
+
+# Track if we should block the commit
+BLOCK_COMMIT=0
+
+# Check if Node.js is available
+if command -v node >/dev/null 2>&1; then
+    # Check if update-docs script exists
+    if [ -f "scripts/update-claude-md.js" ]; then
+        echo "📝 Updating CLAUDE.md documentation..."
+        node scripts/update-claude-md.js
+        UPDATE_STATUS=$?
+        
+        if [ $UPDATE_STATUS -eq 0 ]; then
+            # Add updated CLAUDE.md to commit if it changed
+            if git diff --name-only | grep -q "CLAUDE.md"; then
+                echo "✅ CLAUDE.md updated and will be included in commit"
+                git add CLAUDE.md
+            fi
+        else
+            echo "❌ CLAUDE.md update failed due to ESLint errors"
+            BLOCK_COMMIT=1
+        fi
+    fi
+fi
+
+# Run TypeScript check
+echo "🔍 Running TypeScript type check..."
+npm run typecheck 2>/dev/null
+TYPECHECK_STATUS=$?
+if [ $TYPECHECK_STATUS -ne 0 ]; then
+    echo "❌ TypeScript check failed!"
+    BLOCK_COMMIT=1
+fi
+
+# Run ESLint
+echo "🧹 Running ESLint..."
+npm run lint 2>/dev/null
+LINT_STATUS=$?
+if [ $LINT_STATUS -ne 0 ]; then
+    echo "❌ ESLint found errors!"
+    BLOCK_COMMIT=1
+fi
+
+# Block commit if any checks failed
+if [ $BLOCK_COMMIT -eq 1 ]; then
+    echo "❌ Pre-commit checks failed! Fix the errors above before committing."
+    echo ""
+    echo "To bypass these checks (NOT recommended), use:"
+    echo "  git commit --no-verify"
+    exit 1
+else
+    echo "✅ Pre-commit checks complete!"
+    exit 0
+fi

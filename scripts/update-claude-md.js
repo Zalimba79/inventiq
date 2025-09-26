@@ -49,15 +49,21 @@ function getComponents(dir) {
 // Get ESLint error count
 function getEslintErrors() {
   try {
-    execSync('npm run lint -- --quiet', { cwd: PROJECT_ROOT, encoding: 'utf8' });
-    return 0;
+    // Run ESLint and capture ALL output (stdout and stderr)
+    execSync('npm run lint 2>&1', { cwd: PROJECT_ROOT, encoding: 'utf8' });
+    // If no exception, means no errors
+    return { errors: 0, warnings: 0 };
   } catch (error) {
-    const output = error.stdout || '';
-    const errorMatch = output.match(/(\d+)\s+error/);
-    const warningMatch = output.match(/(\d+)\s+warning/);
+    // ESLint exited with non-zero, parse the error output
+    const output = error.stdout || error.stderr || error.message || '';
+    
+    // Count actual error and warning lines
+    const errorLines = (output.match(/Error:/g) || []).length;
+    const warningLines = (output.match(/Warning:/g) || []).length;
+    
     return {
-      errors: errorMatch ? parseInt(errorMatch[1], 10) : 0,
-      warnings: warningMatch ? parseInt(warningMatch[1], 10) : 0
+      errors: errorLines,
+      warnings: warningLines
     };
   }
 }
@@ -166,6 +172,7 @@ const qualityContent = `Status (Last Updated: ${today})
 - **Dependencies**: ${stats.dependencies.main} runtime, ${stats.dependencies.dev} dev
 - **Git Branch**: ${stats.git.branch}
 - **Uncommitted Changes**: ${stats.git.uncommittedFiles} files
+- **Last Commit**: ${stats.git.lastCommit}
 `;
 
 // Update Auto-Generated Stats section
@@ -196,3 +203,9 @@ console.log(`   - Components: ${stats.files.components}`);
 console.log(`   - ESLint: ${stats.eslint.errors || 0} errors, ${stats.eslint.warnings || 0} warnings`);
 console.log(`   - Git: ${stats.git.branch} branch, ${stats.git.uncommittedFiles} uncommitted files`);
 console.log('\n💡 Run this script before committing to keep CLAUDE.md in sync');
+
+// Exit with error code if there are ESLint errors
+if (stats.eslint.errors > 0) {
+  console.log(`\n⚠️  ESLint errors detected: ${stats.eslint.errors} errors`);
+  process.exit(1);
+}
