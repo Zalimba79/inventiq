@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 import { DraftProductCard } from '@/components/products/DraftProductCard'
-import { ImageLightbox } from '@/components/products/ImageLightbox'
+import { ProductGalleryLightbox } from '@/components/products/ProductGalleryLightbox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -38,7 +38,7 @@ export default function DraftProductsPage(): JSX.Element {
 
   const [mounted, setMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [lightboxImage, setLightboxImage] = useState<{ src: string, alt: string } | null>(null)
+  const [lightboxProduct, setLightboxProduct] = useState<{ product: typeof draftProducts[0], photoIndex: number } | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -224,7 +224,15 @@ export default function DraftProductsPage(): JSX.Element {
                     })
                   }}
                   onImageClick={(src, alt) => {
-                    setLightboxImage({ src, alt })
+                    // Find the photo index for this specific image
+                    const photoIndex = product.photos.findIndex(p => {
+                      const photoUrl = p.url ?? p.dataUrl
+                      return photoUrl === src
+                    })
+                    setLightboxProduct({ 
+                      product, 
+                      photoIndex: photoIndex >= 0 ? photoIndex : 0 
+                    })
                   }}
                 />
               </Card>
@@ -233,13 +241,13 @@ export default function DraftProductsPage(): JSX.Element {
         </div>
       )}
       
-      {/* Image Lightbox */}
-      {lightboxImage && (
-        <ImageLightbox
-          isOpen={!!lightboxImage}
-          onClose={() => setLightboxImage(null)}
-          imageSrc={lightboxImage.src}
-          imageAlt={lightboxImage.alt}
+      {/* Product Gallery Lightbox */}
+      {lightboxProduct && (
+        <ProductGalleryLightbox
+          isOpen={!!lightboxProduct}
+          onClose={() => setLightboxProduct(null)}
+          product={lightboxProduct.product}
+          initialPhotoIndex={lightboxProduct.photoIndex}
         />
       )}
     </div>

@@ -1,0 +1,63 @@
+version: '3.8'
+
+# Development-only Docker Compose
+# Use: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: inventiq-postgres-dev
+    environment:
+      POSTGRES_DB: inventiq
+      POSTGRES_USER: inventiq
+      POSTGRES_PASSWORD: inventiq2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventiq -d inventiq"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO läuft bereits auf Synology (10.2.200.102:9000)
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: inventiq-minio-dev
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: adm_maie
+  #     MINIO_ROOT_PASSWORD: inventiq!2025
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - minio_dev_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: inventiq-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@inventiq.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+
+volumes:
+  postgres_dev_data:
+  # minio_dev_data:  # Nicht benötigt - läuft auf Synology
+  pgadmin_dev_data:

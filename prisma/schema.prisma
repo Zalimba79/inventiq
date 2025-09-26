@@ -26,6 +26,7 @@ model Product {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   status      ProductStatus @default(DRAFT)
+  quantity    Int           @default(1)
   
   // AI Analysis Results (populated after analysis)
   name        String?
@@ -64,8 +65,10 @@ model ProductPhoto {
   productId   String
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
-  // Image data
-  dataUrl     String   @db.Text  // Base64 encoded image
+  // Image storage (MinIO URLs instead of base64)
+  url         String?  // MinIO URL for full image
+  thumbnailUrl String? // MinIO URL for thumbnail
+  dataUrl     String?  @db.Text  // Optional base64 fallback
   mimeType    String   @default("image/jpeg")
   width       Int?
   height      Int?
@@ -74,6 +77,7 @@ model ProductPhoto {
   // Metadata
   isPrimary   Boolean  @default(false)
   angle       String?  // front, back, side, top, etc.
+  timestamp   DateTime @default(now())
   
   @@index([productId])
 }
