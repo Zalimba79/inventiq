@@ -248,7 +248,7 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
             }}
             draggable={false}
             priority
-          />
+           unoptimized/>
           
           {/* Drag indicator */}
           {zoom > 1 && !isDragging && (

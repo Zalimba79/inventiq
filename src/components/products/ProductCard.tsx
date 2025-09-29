@@ -123,7 +123,7 @@ function ProductGridContent({
               fill
               className="object-cover transition-transform duration-200 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            />
+             unoptimized/>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
               <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
             </div>
@@ -204,7 +204,7 @@ function ProductListContent({
               width={80}
               height={80}
               className="object-cover transition-transform duration-200 group-hover:scale-110"
-            />
+             unoptimized/>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
               <ZoomIn className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
             </div>

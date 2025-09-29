@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { StudioLayoutV2 } from '@/components/studio/StudioLayoutV2'
-import { useProductStore } from '@/store/product-store'
+import { useProductDBStore } from '@/store/product-db-store'
 
 interface StudioImage {
   id?: string
@@ -20,11 +20,11 @@ interface StudioImage {
  */
 export default function StudioPage(): JSX.Element {
   const router = useRouter()
-  const { createProduct } = useProductStore()
+  const { createProduct } = useProductDBStore()
   
-  const handleSave = (images: StudioImage[]): void => {
-    // Create product with captured images
-    console.log('🎬 Studio handleSave called with images:', images)
+  const handleSave = (images: StudioImage[], quantity: number): void => {
+    // Create product with captured images and quantity
+    console.log('🎬 Studio handleSave called with images and quantity:', images, quantity)
     
     if (images.length > 0) {
       const photos = images.map((img, index) => {
@@ -51,9 +51,32 @@ export default function StudioPage(): JSX.Element {
         }
       })
       
-      console.log('📦 Creating product with photos:', photos)
-      void createProduct(photos, 1)
-      router.push('/products/draft')
+      console.log('📦 Creating product with photos and quantity:', photos, quantity)
+      
+      // Create product data for DB store
+      const productData = {
+        name: `Product ${new Date().toLocaleDateString()}`,
+        status: 'DRAFT',
+        quantity: quantity,
+        userId: 'default-user',
+        currency: 'EUR',
+        photos: photos.map(photo => ({
+          url: photo.url,
+          thumbnailUrl: photo.thumbnailUrl,
+          dataUrl: photo.dataUrl,
+          mimeType: photo.mimeType,
+          size: photo.size,
+          isPrimary: photo.isPrimary
+        }))
+      }
+      
+      createProduct(productData)
+        .then(() => {
+          router.push('/products/draft')
+        })
+        .catch((error) => {
+          console.error('Failed to create product:', error)
+        })
     }
   }
   

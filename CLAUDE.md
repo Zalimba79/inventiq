@@ -139,10 +139,10 @@ Status (Last Updated: 2025-09-26)
 - **TypeScript Files**: 103 files
 - **Components**: 54 React components
 - **Pages**: 10 Next.js pages
-- **Dependencies**: 33 runtime, 30 dev
+- **Dependencies**: 33 runtime, 31 dev
 - **Git Branch**: develop
-- **Uncommitted Changes**: 4 files
-- **Last Commit**: 3cbd38e feat: Add PostgreSQL database integration and Docker setup
+- **Uncommitted Changes**: 5 files
+- **Last Commit**: 7ab8b06 fix: repair pre-commit hook and update-claude-md script
 
 
 ### ESLint Configuration
@@ -157,6 +157,45 @@ Status (Last Updated: 2025-09-26)
 
 
 ## Key Components
+
+### Dashboard Components
+- `ActivityFeed`: Recent activity timeline
+- `DashboardLayout`: Component
+- `Header`: Top navigation with user menu and notifications
+- `HomePage`: Main dashboard orchestration component
+- `QuickActions`: Quick access buttons
+- `RecentCaptures`: Recent photo thumbnails
+- `StatsCard`: Dashboard statistics display
+- `StatsOverview`: Component
+- `StorageWidget`: Component
+- `TipsWidget`: Component
+
+### Camera Components
+
+
+### Product Components
+- `BulkProductValidation`: Validate multiple products
+- `DraftProductCard`: Component
+- `ImageLightbox`: Component
+- `ProductCard`: Component
+- `ProductGallery`: Display products with filtering
+- `ProductGalleryLightbox`: Component
+- `ProductValidation`: Review and validate AI results
+- `ValidationHistory`: Component
+
+### UI Components
+- `alert`: shadcn/ui component
+- `avatar`: shadcn/ui component
+- `badge`: shadcn/ui component
+- `button`: shadcn/ui component
+- `card`: shadcn/ui component
+- `checkbox`: shadcn/ui component
+- `dialog`: shadcn/ui component
+- `dropdown-menu`: shadcn/ui component
+- `input`: shadcn/ui component
+- `label`: shadcn/ui component
+- ... and 8 more UI components
+
 
 ### Dashboard Components
 - `ActivityFeed`: Recent activity timeline

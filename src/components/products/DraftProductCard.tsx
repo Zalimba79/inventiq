@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePhotoLoader } from '@/hooks/usePhotoLoader'
-import { type Product } from '@/store/product-store'
+import { type Product } from '@/store/product-db-store'
 
 interface DraftProductCardProps {
   product: Product
@@ -20,6 +20,7 @@ interface DraftProductCardProps {
   onDelete: (productId: string) => void
   onAnalyze: (productId: string) => void
   onImageClick: (src: string, alt: string) => void
+  index?: number
 }
 
 export function DraftProductCard({
@@ -29,7 +30,8 @@ export function DraftProductCard({
   onCheckboxChange,
   onDelete,
   onAnalyze,
-  onImageClick
+  onImageClick,
+  index = 0
 }: DraftProductCardProps): JSX.Element {
   const router = useRouter()
   const primaryPhoto = product.photos.find((p) => p.isPrimary) ?? product.photos[0]
@@ -103,6 +105,8 @@ export function DraftProductCard({
                   fill
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  priority={index < 8}
+                  unoptimized
                   onError={() => setImageError(true)}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">

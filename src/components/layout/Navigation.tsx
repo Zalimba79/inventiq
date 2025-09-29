@@ -73,7 +73,9 @@ export function Navigation(): JSX.Element {
                 width={40} 
                 height={40}
                 className="object-contain"
-                priority
+                priority={false}
+                loading="eager"
+                unoptimized
               />
               <span className="text-xl font-bold">Inventiq</span>
             </Link>

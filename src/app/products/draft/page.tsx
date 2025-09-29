@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
-import { useProductStore } from '@/store/product-store'
+import { useProductDBStore } from '@/store/product-db-store'
 
 export default function DraftProductsPage(): JSX.Element {
   const router = useRouter()
@@ -30,18 +30,22 @@ export default function DraftProductsPage(): JSX.Element {
     deselectProduct,
     deselectAllProducts,
     deleteProduct,
-    queueProductsForAnalysis,
-    processAnalysisQueue,
-    isAnalyzing,
-    getProductsByStatus
-  } = useProductStore()
+    deletePhoto,
+    setPrimaryPhoto,
+    queueForAnalysis,
+    fetchProducts,
+    products
+  } = useProductDBStore()
 
   const [mounted, setMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [lightboxProduct, setLightboxProduct] = useState<{ product: typeof draftProducts[0], photoIndex: number } | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    // Fetch products from database on mount
+    void fetchProducts('DRAFT')
   }, [])
 
   if (!mounted) {
@@ -52,7 +56,7 @@ export default function DraftProductsPage(): JSX.Element {
     )
   }
 
-  const draftProducts = getProductsByStatus('DRAFT')
+  const draftProducts = products.filter(p => p.status === 'DRAFT')
 
   const handleCheckboxChange = (productId: string, checked: boolean): void => {
     if (checked) {
@@ -76,12 +80,15 @@ export default function DraftProductsPage(): JSX.Element {
     )
     if (selectedIds.length === 0) return
     
-    queueProductsForAnalysis(selectedIds)
-    deselectAllProducts()
-    await processAnalysisQueue()
-    
-    // Navigate to validation page after analysis
-    router.push('/products/validation')
+    setIsAnalyzing(true)
+    try {
+      await queueForAnalysis(selectedIds)
+      deselectAllProducts()
+      // Navigate to validation page after analysis
+      router.push('/products/validation')
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const handleDeleteSelected = (): void => {
@@ -199,7 +206,7 @@ export default function DraftProductsPage(): JSX.Element {
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
             : "space-y-2"
         )}>
-          {draftProducts.map((product) => {
+          {draftProducts.map((product, index) => {
             const isSelected = selectedProductIds.has(product.id)
             
             return (
@@ -217,11 +224,14 @@ export default function DraftProductsPage(): JSX.Element {
                   viewMode={viewMode}
                   onCheckboxChange={handleCheckboxChange}
                   onDelete={handleDeleteSingle}
-                  onAnalyze={(productId) => {
-                    queueProductsForAnalysis([productId])
-                    void processAnalysisQueue().then(() => {
+                  onAnalyze={async (productId) => {
+                    setIsAnalyzing(true)
+                    try {
+                      await queueForAnalysis([productId])
                       router.push('/products/validation')
-                    })
+                    } finally {
+                      setIsAnalyzing(false)
+                    }
                   }}
                   onImageClick={(src, alt) => {
                     // Find the photo index for this specific image
@@ -234,6 +244,7 @@ export default function DraftProductsPage(): JSX.Element {
                       photoIndex: photoIndex >= 0 ? photoIndex : 0 
                     })
                   }}
+                  index={index}
                 />
               </Card>
             )
@@ -248,6 +259,24 @@ export default function DraftProductsPage(): JSX.Element {
           onClose={() => setLightboxProduct(null)}
           product={lightboxProduct.product}
           initialPhotoIndex={lightboxProduct.photoIndex}
+          onSetPrimaryPhoto={(photoId) => {
+            setPrimaryPhoto(lightboxProduct.product.id, photoId)
+            // Update the lightbox product to reflect changes
+            const updatedProduct = products.find(p => p.id === lightboxProduct.product.id)
+            if (updatedProduct) {
+              setLightboxProduct({ ...lightboxProduct, product: updatedProduct })
+            }
+          }}
+          onDeletePhoto={(photoId) => {
+            void deletePhoto(lightboxProduct.product.id, photoId)
+            // Update or close lightbox if no photos remain
+            const updatedProduct = products.find(p => p.id === lightboxProduct.product.id)
+            if (updatedProduct && updatedProduct.photos.length > 1) {
+              setLightboxProduct({ ...lightboxProduct, product: updatedProduct })
+            } else {
+              setLightboxProduct(null)
+            }
+          }}
         />
       )}
     </div>

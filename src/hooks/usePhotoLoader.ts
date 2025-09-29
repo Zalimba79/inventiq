@@ -1,69 +1,47 @@
 /**
- * Hook for loading photos from hybrid storage
- * Handles automatic loading from IndexedDB when needed
+ * Hook for loading photos from database storage
+ * Simplified version for database-backed photos with URLs
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 
-import { useProductStore } from '../store/product-store'
-import type { ProductPhoto } from '../store/product-store'
+import type { ProductPhoto } from '../store/product-db-store'
 
 export interface PhotoWithData extends ProductPhoto {
-  dataUrl: string // Guaranteed to be loaded
+  dataUrl: string // Guaranteed to be loaded (either dataUrl or url)
   isLoading?: boolean
   error?: string
 }
 
 /**
- * Load a single photo with automatic IndexedDB fallback
+ * Load a single photo - simplified for database storage
  */
 export function usePhotoLoader(photo: ProductPhoto | null): { photo: PhotoWithData | null; isLoading: boolean; error: string | null } {
   const [photoData, setPhotoData] = useState<PhotoWithData | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const loadPhoto = useProductStore(state => state.loadPhoto)
   
   useEffect(() => {
     if (!photo) {
       setPhotoData(null)
+      setError(null)
       return
     }
     
-    // If photo already has dataUrl, use it directly
-    if (photo.dataUrl) {
+    // For DB store, photos have URLs (MinIO) or dataUrls
+    const effectiveUrl = photo.url || photo.dataUrl
+    
+    if (effectiveUrl) {
       setPhotoData({
         ...photo,
-        dataUrl: photo.dataUrl
+        dataUrl: effectiveUrl
       })
-      return
-    }
-    
-    // Need to load from IndexedDB
-    if (photo.storageType === 'indexedDB' && !photo.isLoaded) {
-      setIsLoading(true)
       setError(null)
-      
-      loadPhoto(photo.id)
-        .then(dataUrl => {
-          if (dataUrl) {
-            setPhotoData({
-              ...photo,
-              dataUrl,
-              isLoading: false
-            })
-          } else {
-            setError('Failed to load photo')
-          }
-        })
-        .catch((err: unknown) => {
-          setError(err instanceof Error ? err.message : 'Failed to load photo')
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
+    } else {
+      setPhotoData(null)
+      setError('No photo data available')
     }
-  }, [photo, loadPhoto])
+  }, [photo])
   
   return {
     photo: photoData,
@@ -73,88 +51,32 @@ export function usePhotoLoader(photo: ProductPhoto | null): { photo: PhotoWithDa
 }
 
 /**
- * Load multiple photos with batching
+ * Load multiple photos
  */
-export function usePhotoListLoader(photos: ProductPhoto[]): { photos: PhotoWithData[]; isLoading: boolean; error: string | null; reload: () => Promise<void> } {
+export function usePhotoListLoader(photos: ProductPhoto[]): { photos: PhotoWithData[]; isLoading: boolean; error: string | null; reload: () => void } {
   const [loadedPhotos, setLoadedPhotos] = useState<PhotoWithData[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
-  const loadPhoto = useProductStore(state => state.loadPhoto)
-  
-  const loadPhotos = useCallback(async () => {
-    if (photos.length === 0) {
-      setLoadedPhotos([])
-      return
-    }
-    
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      const results: PhotoWithData[] = []
-      
-      // Process photos in parallel
-      await Promise.all(
-        photos.map(async (photo, index) => {
-          if (photo.dataUrl) {
-            // Already loaded
-            // eslint-disable-next-line security/detect-object-injection
-            results[index] = {
-              ...photo,
-              dataUrl: photo.dataUrl
-            }
-          } else if (photo.storageType === 'indexedDB') {
-            // Load from IndexedDB
-            const dataUrl = await loadPhoto(photo.id)
-            if (dataUrl) {
-              // eslint-disable-next-line security/detect-object-injection
-              results[index] = {
-                ...photo,
-                dataUrl
-              }
-            } else {
-              // eslint-disable-next-line security/detect-object-injection
-              results[index] = {
-                ...photo,
-                dataUrl: '', // Fallback
-                error: 'Failed to load'
-              }
-            }
-          } else {
-            // Default storage type, assume localStorage
-            // eslint-disable-next-line security/detect-object-injection
-            results[index] = {
-              ...photo,
-              dataUrl: photo.dataUrl ?? '',
-              error: photo.dataUrl ? undefined : 'No data URL'
-            }
-          }
-        })
-      )
-      
-      setLoadedPhotos(results)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load photos')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [photos, loadPhoto])
+  const [isLoading] = useState(false)
+  const [error] = useState<string | null>(null)
   
   useEffect(() => {
-    void loadPhotos()
-  }, [loadPhotos])
+    const results: PhotoWithData[] = photos.map(photo => ({
+      ...photo,
+      dataUrl: photo.url || photo.dataUrl || ''
+    }))
+    
+    setLoadedPhotos(results)
+  }, [photos])
   
   return {
     photos: loadedPhotos,
     isLoading,
     error,
-    reload: loadPhotos
+    reload: () => {} // No-op for now since photos are already loaded
   }
 }
 
 /**
- * Create a ProductPhoto with proper defaults for the new hybrid system
+ * Create a ProductPhoto with proper defaults
  */
 export function createProductPhoto(params: {
   dataUrl: string
@@ -163,21 +85,18 @@ export function createProductPhoto(params: {
   angle?: string
   timestamp?: Date
 }): ProductPhoto {
-  const size = estimatePhotoSize(params.dataUrl)
-  const sizeInMB = size / (1024 * 1024)
-  
   return {
-    id: `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     dataUrl: params.dataUrl,
+    url: undefined, // Will be set after upload to MinIO
+    thumbnailUrl: undefined,
     mimeType: params.mimeType ?? 'image/jpeg',
-    size,
+    size: estimatePhotoSize(params.dataUrl),
     isPrimary: params.isPrimary ?? false,
     angle: params.angle,
     timestamp: params.timestamp ?? new Date(),
-    isLoaded: true,
-    storageType: sizeInMB > 0.5 ? 'indexedDB' : 'localStorage', // Auto-determine
-    originalSize: size,
-    compressed: false
+    width: undefined,
+    height: undefined
   }
 }
 

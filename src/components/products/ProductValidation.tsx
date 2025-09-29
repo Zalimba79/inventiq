@@ -310,7 +310,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                 unoptimized/>
               </div>
             )}
             
@@ -332,7 +332,7 @@ export function ProductValidation({ productId, onComplete, className }: ProductV
                         fill
                         className="object-cover"
                         sizes="25vw"
-                      />
+                       unoptimized/>
                     </div>
                   )
                 ))}

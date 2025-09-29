@@ -10,7 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
 
 import { CameraSelector } from './CameraSelector'
-import { UltraQuickResolutionSelector } from './UltraQuickResolutionSelector'
+import { NoTestResolutionSelector } from './NoTestResolutionSelector'
 
 
 interface LeftSidebarProps {
@@ -46,6 +46,7 @@ export function LeftSidebar({
   show360 = false,
   className 
 }: LeftSidebarProps): JSX.Element {
+  
   return (
     <div className={cn("bg-card text-card-foreground p-2 overflow-y-auto border-r border-border", className)}>
       <div className="space-y-3">
@@ -62,7 +63,7 @@ export function LeftSidebar({
             className="text-xs"
           />
           
-          <UltraQuickResolutionSelector
+          <NoTestResolutionSelector
             deviceId={selectedCamera}
             onResolutionChange={onResolutionChange}
             className="text-xs"

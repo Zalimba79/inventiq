@@ -92,7 +92,7 @@ export function RecentCaptures({ className, limit = 6 }: RecentCapturesProps): J
                 fill
                 className="object-cover rounded hover:opacity-90 transition-opacity"
                 sizes="(max-width: 768px) 33vw, 16vw"
-              />
+               unoptimized/>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded">
                 <div className="absolute bottom-1 left-1 right-1">
                   <p className="text-white text-xs truncate">

@@ -6,7 +6,7 @@ import { useMinioUpload } from '@/hooks/useMinioUpload'
 import { cn } from '@/lib/utils'
 
 import { BottomBar } from './BottomBar'
-import { CameraPreview, type CameraPreviewRef } from './CameraPreview'
+import { AdaptiveCameraPreview, type AdaptiveCameraRef } from './AdaptiveCameraPreview'
 import { LeftSidebar } from './LeftSidebar'
 import { RightSidebar } from './RightSidebar'
 import { TopToolbar } from './TopToolbar'
@@ -23,7 +23,7 @@ interface CapturedImage {
 }
 
 interface StudioLayoutV2Props {
-  onSave: (images: CapturedImage[]) => void
+  onSave: (images: CapturedImage[], quantity: number) => void
   className?: string
 }
 
@@ -46,8 +46,10 @@ export function StudioLayoutV2({
   const [showGoldenRatio, setShowGoldenRatio] = useState(false)
   const [show360Markers, setShow360Markers] = useState(false)
   const [currentProductId] = useState(`product-${Date.now()}`)
+  const [productQuantity, setProductQuantity] = useState(1)
+  const [zoomLevel, setZoomLevel] = useState(100)
   
-  const cameraPreviewRef = useRef<CameraPreviewRef>(null)
+  const cameraPreviewRef = useRef<AdaptiveCameraRef>(null)
   
   const { uploadBase64, deleteImage } = useMinioUpload({
     onSuccess: (result) => {
@@ -143,9 +145,10 @@ export function StudioLayoutV2({
   }
   
   const handleSave = () => {
-    // Save all images (uploaded ones will have url, others will have dataUrl)
-    onSave(capturedImages)
+    // Save all images with quantity (uploaded ones will have url, others will have dataUrl)
+    onSave(capturedImages, productQuantity)
     setCapturedImages([])
+    setProductQuantity(1) // Reset quantity after saving
   }
   
   const handleDeleteImage = async (id: string) => {
@@ -194,10 +197,11 @@ export function StudioLayoutV2({
           {/* Camera container - holds video and overlays */}
           <div className="relative" style={{ maxWidth: '100%', maxHeight: '100%' }}>
             {/* Camera Feed */}
-            <CameraPreview
+            <AdaptiveCameraPreview
               ref={cameraPreviewRef}
               deviceId={selectedCamera}
               resolution={selectedResolution}
+              zoomLevel={zoomLevel}
               className="h-full"
             />
             
@@ -329,6 +333,10 @@ export function StudioLayoutV2({
         {/* Right Sidebar */}
         <RightSidebar 
           className="w-56 flex-shrink-0"
+          quantity={productQuantity}
+          onQuantityChange={setProductQuantity}
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
         />
       </div>
       

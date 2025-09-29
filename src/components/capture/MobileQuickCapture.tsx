@@ -184,7 +184,7 @@ export function MobileQuickCapture({ className }: MobileQuickCaptureProps): JSX.
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 50vw"
-                  />
+                   unoptimized/>
                   <div className="absolute top-2 right-2 flex gap-1">
                     {index === 0 && (
                       <div className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs">

@@ -258,7 +258,7 @@ export default function ConfirmedProductsPage(): JSX.Element {
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                     unoptimized/>
                   )}
                 </div>
                 <CardContent className="p-3">
@@ -300,7 +300,7 @@ export default function ConfirmedProductsPage(): JSX.Element {
                         width={80}
                         height={80}
                         className="object-cover"
-                      />
+                       unoptimized/>
                     )}
                   </div>
                   <div className="flex-1">

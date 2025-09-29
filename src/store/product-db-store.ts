@@ -4,7 +4,7 @@ import type { ProductStatus as PrismaProductStatus } from '@prisma/client'
 
 export type ProductStatus = PrismaProductStatus
 
-interface ProductPhoto {
+export interface ProductPhoto {
   id: string
   url?: string
   thumbnailUrl?: string
@@ -18,7 +18,7 @@ interface ProductPhoto {
   height?: number | null
 }
 
-interface Product {
+export interface Product {
   id: string
   createdAt: Date
   updatedAt: Date

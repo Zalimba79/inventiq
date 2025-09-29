@@ -113,7 +113,7 @@ export function BottomBar({
                   fill
                   className="object-cover"
                   sizes="80px"
-                />
+                 unoptimized/>
                 {/* Upload status indicator */}
                 {image.uploadStatus === 'uploading' && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

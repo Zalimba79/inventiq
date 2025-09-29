@@ -9,29 +9,34 @@ import {
   ChevronLeft, 
   ChevronRight,
   Grid,
-  Maximize2
+  Maximize2,
+  Trash2,
+  Star
 } from 'lucide-react'
-import Image from 'next/image'
 import React, { useState, useCallback, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { usePhotoLoader } from '@/hooks/usePhotoLoader'
 import { cn } from '@/lib/utils'
-import type { Product, ProductPhoto } from '@/store/product-store'
+import type { Product } from '@/store/product-db-store'
 
 interface ProductGalleryLightboxProps {
   isOpen: boolean
   onClose: () => void
   product: Product
   initialPhotoIndex?: number
+  onSetPrimaryPhoto?: (photoId: string) => void
+  onDeletePhoto?: (photoId: string) => void
 }
 
 export function ProductGalleryLightbox({ 
   isOpen, 
   onClose, 
   product,
-  initialPhotoIndex = 0
+  initialPhotoIndex = 0,
+  onSetPrimaryPhoto,
+  onDeletePhoto
 }: ProductGalleryLightboxProps): JSX.Element | null {
   const [currentIndex, setCurrentIndex] = useState(initialPhotoIndex)
   const [zoom, setZoom] = useState(1)
@@ -144,6 +149,25 @@ export function ProductGalleryLightbox({
     setRotation(0)
   }, [])
 
+  const handleSetPrimary = useCallback(() => {
+    if (currentPhoto && onSetPrimaryPhoto && !currentPhoto.isPrimary) {
+      onSetPrimaryPhoto(currentPhoto.id)
+    }
+  }, [currentPhoto, onSetPrimaryPhoto])
+
+  const handleDeletePhoto = useCallback(() => {
+    if (currentPhoto && onDeletePhoto && product.photos.length > 1) {
+      const photoToDelete = currentPhoto.id
+      // Move to previous photo before deleting
+      if (currentIndex > 0) {
+        setCurrentIndex(currentIndex - 1)
+      } else if (product.photos.length > 1) {
+        setCurrentIndex(0)
+      }
+      onDeletePhoto(photoToDelete)
+    }
+  }, [currentPhoto, currentIndex, onDeletePhoto, product.photos.length])
+
   if (!isOpen || !product.photos.length) return null
 
   return (
@@ -178,6 +202,46 @@ export function ProductGalleryLightbox({
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Set as Primary Photo - Shows star (outline or filled) */}
+              {onSetPrimaryPhoto && currentPhoto && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (!currentPhoto.isPrimary && onSetPrimaryPhoto) {
+                      onSetPrimaryPhoto(currentPhoto.id)
+                    }
+                  }}
+                  className={cn(
+                    "text-white",
+                    !currentPhoto.isPrimary && "hover:bg-white/20"
+                  )}
+                  title={currentPhoto.isPrimary ? "Primary photo" : "Set as primary photo"}
+                >
+                  <Star className={cn(
+                    "h-4 w-4",
+                    currentPhoto.isPrimary && "fill-white"
+                  )} />
+                </Button>
+              )}
+              
+              {/* Delete Photo */}
+              {onDeletePhoto && product.photos.length > 1 && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleDeletePhoto}
+                  className="text-red-400 hover:bg-red-400/20"
+                  title="Delete photo"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              
+              <div className="w-px h-6 bg-white/20" />
+              
               <Button
                 size="icon"
                 variant="ghost"
@@ -257,27 +321,26 @@ export function ProductGalleryLightbox({
           )}
 
           {/* Image Container */}
-          <div className="relative flex items-center justify-center w-full h-full overflow-hidden">
+          <div className="relative flex items-center justify-center w-full h-full overflow-hidden px-16 py-20">
             {imageUrl ? (
               <div
-                className="relative transition-transform duration-200"
+                className="relative transition-transform duration-200 flex items-center justify-center"
                 style={{
                   transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                  maxWidth: '100%',
+                  maxHeight: '100%',
                 }}
               >
-                <Image
+                <img
                   src={imageUrl}
                   alt={`${product.name || 'Product'} - Image ${currentIndex + 1}`}
-                  width={800}
-                  height={600}
-                  className="max-w-none"
+                  className="max-w-full max-h-full object-contain"
                   style={{
-                    maxHeight: '70vh',
+                    maxHeight: 'calc(100vh - 200px)',
+                    maxWidth: 'calc(100vw - 160px)',
                     width: 'auto',
                     height: 'auto',
-                    objectFit: 'contain'
                   }}
-                  priority
                 />
               </div>
             ) : (
@@ -302,36 +365,45 @@ export function ProductGalleryLightbox({
         {/* Thumbnail Strip */}
         {showThumbnails && product.photos.length > 1 && (
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <div className="flex gap-2 justify-center overflow-x-auto max-w-full">
-              {product.photos.map((photo, index) => {
-                // Use URL directly without hook for thumbnails
+            <div className="flex gap-2 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'thin' }}>
+              {/* Sort photos to show primary first, then others in original order */}
+              {[...product.photos].sort((a, b) => {
+                if (a.isPrimary) return -1
+                if (b.isPrimary) return 1
+                return 0
+              }).map((photo) => {
+                // Find the actual index in the original array for selection
+                const actualIndex = product.photos.findIndex(p => p.id === photo.id)
                 const thumbUrl = photo.thumbnailUrl ?? photo.url ?? photo.dataUrl
+                const isSelected = currentIndex === actualIndex
                 
                 return (
                   <button
                     key={photo.id}
-                    onClick={() => handleThumbnailClick(index)}
+                    onClick={() => handleThumbnailClick(actualIndex)}
                     className={cn(
                       "relative w-20 h-20 rounded overflow-hidden border-2 transition-all flex-shrink-0",
-                      currentIndex === index 
-                        ? "border-white scale-110" 
-                        : "border-white/20 hover:border-white/50"
+                      isSelected 
+                        ? "border-white scale-110 shadow-xl" 
+                        : "border-white/20 hover:border-white/50 opacity-80 hover:opacity-100"
                     )}
-                    title={`Image ${index + 1}`}
+                    title={`Image ${actualIndex + 1}${photo.isPrimary ? ' (Main)' : ''}`}
                   >
                     {thumbUrl ? (
-                      <Image
+                      <img
                         src={thumbUrl}
-                        alt={`Thumbnail ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
+                        alt={`Thumbnail ${actualIndex + 1}`}
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-800" />
                     )}
+                    
+                    {/* Primary indicator - Black label with white text */}
                     {photo.isPrimary && (
-                      <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
+                      <div className="absolute top-1 right-1 bg-black rounded px-1.5 py-0.5">
+                        <span className="text-[10px] font-semibold text-white">Main</span>
+                      </div>
                     )}
                   </button>
                 )
