@@ -6,6 +6,7 @@ import React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { getSecureImageUrl } from '@/lib/utils/image-proxy'
 
 interface CapturedImage {
   id: string
@@ -107,13 +108,32 @@ export function BottomBar({
                     : "border-border hover:border-muted-foreground"
                 )}
               >
-                <Image
-                  src={image.url || image.dataUrl || ''}
-                  alt={`Capture ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                 unoptimized/>
+                {(() => {
+                  // Use secure URL for HTTPS or fallback to dataUrl
+                  const imageUrl = getSecureImageUrl(image.url) || image.dataUrl
+                  
+                  return imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={`Capture ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                      unoptimized
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${imageUrl}`)
+                        // Try to fallback to dataUrl if URL fails
+                        if (image.url && image.dataUrl && e.currentTarget.src !== image.dataUrl) {
+                          e.currentTarget.src = image.dataUrl
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <span className="text-muted-foreground text-xs">No image</span>
+                    </div>
+                  )
+                })()}
                 {/* Upload status indicator */}
                 {image.uploadStatus === 'uploading' && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

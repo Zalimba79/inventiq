@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3'
 
 import prisma from '@/lib/prisma'
+
+// MinIO client configuration
+const client = new S3Client({
+  endpoint: process.env.S3_ENDPOINT!,
+  region: process.env.S3_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!
+  },
+  forcePathStyle: true
+})
 
 // POST /api/products/[id]/photos - Add photo to product
 export async function POST(
@@ -54,6 +66,62 @@ export async function DELETE(
       )
     }
 
+    // First, get the photo to find the MinIO URLs
+    const photo = await prisma.productPhoto.findUnique({
+      where: { 
+        id: photoId
+      }
+    })
+
+    if (!photo) {
+      return NextResponse.json(
+        { error: 'Photo not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete from MinIO if URLs exist
+    if (photo.url || photo.thumbnailUrl) {
+      const deletePromises = []
+      
+      // Extract the key from the URL for main image
+      if (photo.url) {
+        const urlParts = photo.url.split('/')
+        const bucket = urlParts[3] // inventiq-assets
+        const key = urlParts.slice(4).join('/') // products/product-xxx/xxx.jpg
+        
+        deletePromises.push(
+          client.send(new DeleteObjectCommand({
+            Bucket: bucket,
+            Key: key
+          })).catch(err => {
+            console.error('Error deleting main image from MinIO:', err)
+          })
+        )
+      }
+      
+      // Extract the key from the URL for thumbnail
+      if (photo.thumbnailUrl) {
+        const urlParts = photo.thumbnailUrl.split('/')
+        const bucket = urlParts[3] // inventiq-assets
+        const key = urlParts.slice(4).join('/') // thumbnails/product-xxx/xxx.jpg
+        
+        deletePromises.push(
+          client.send(new DeleteObjectCommand({
+            Bucket: bucket,
+            Key: key
+          })).catch(err => {
+            console.error('Error deleting thumbnail from MinIO:', err)
+          })
+        )
+      }
+      
+      // Wait for MinIO deletions to complete
+      await Promise.all(deletePromises)
+      console.log(`Deleted MinIO objects for photo ${photoId}`)
+    }
+
+    // Now delete from database
     await prisma.productPhoto.delete({
       where: { 
         id: photoId,

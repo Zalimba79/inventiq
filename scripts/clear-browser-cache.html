@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Browser Cache for Inventiq</title>
+</head>
+<body>
+    <h1>Clear Browser Cache</h1>
+    <p>Open this file in your browser at http://localhost:3000 to clear cache</p>
+    <button onclick="clearAllCaches()">Clear All Caches</button>
+    <pre id="output"></pre>
+    
+    <script>
+        function clearAllCaches() {
+            const output = document.getElementById('output');
+            let messages = [];
+            
+            // Clear localStorage
+            try {
+                localStorage.clear();
+                messages.push('✅ localStorage cleared');
+            } catch(e) {
+                messages.push('❌ localStorage error: ' + e.message);
+            }
+            
+            // Clear sessionStorage
+            try {
+                sessionStorage.clear();
+                messages.push('✅ sessionStorage cleared');
+            } catch(e) {
+                messages.push('❌ sessionStorage error: ' + e.message);
+            }
+            
+            // Clear Service Workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                    messages.push('✅ Service Workers cleared');
+                    updateOutput();
+                }).catch(e => {
+                    messages.push('❌ Service Worker error: ' + e.message);
+                    updateOutput();
+                });
+            } else {
+                messages.push('ℹ️ No Service Worker support');
+            }
+            
+            // Clear caches
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                    messages.push('✅ Caches cleared');
+                    updateOutput();
+                }).catch(e => {
+                    messages.push('❌ Cache error: ' + e.message);
+                    updateOutput();
+                });
+            } else {
+                messages.push('ℹ️ No Cache API support');
+            }
+            
+            function updateOutput() {
+                output.textContent = messages.join('\n');
+            }
+            
+            updateOutput();
+            
+            // Reload after a second
+            setTimeout(() => {
+                messages.push('\n🔄 Reloading page...');
+                updateOutput();
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 1000);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

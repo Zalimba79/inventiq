@@ -3,6 +3,37 @@ import { ProductStatus } from '@prisma/client'
 
 import prisma from '@/lib/prisma'
 
+// Helper function to transform URLs for HTTPS contexts
+function transformImageUrls(products: any[], request: NextRequest) {
+  const isHTTPS = request.headers.get('x-forwarded-proto') === 'https' || 
+                   request.nextUrl.protocol === 'https:'
+  
+  if (!isHTTPS) return products
+  
+  return products.map(product => ({
+    ...product,
+    photos: product.photos?.map((photo: any) => {
+      // Transform HTTP MinIO URLs to use proxy when on HTTPS
+      const transformUrl = (url: string | null) => {
+        if (!url || url.startsWith('https://')) return url
+        if (url.includes('10.2.200.102:9000')) {
+          // Use the proxy endpoint for HTTP images
+          const origin = request.headers.get('origin') || 
+                        `${request.nextUrl.protocol}//${request.headers.get('host')}`
+          return `${origin}/api/proxy/image?url=${encodeURIComponent(url)}`
+        }
+        return url
+      }
+      
+      return {
+        ...photo,
+        url: transformUrl(photo.url),
+        thumbnailUrl: transformUrl(photo.thumbnailUrl)
+      }
+    })
+  }))
+}
+
 // GET /api/products - Fetch all products
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +47,12 @@ export async function GET(request: NextRequest) {
         userId,
       },
       include: {
-        photos: true,
+        photos: {
+          orderBy: [
+            { isPrimary: 'desc' },  // Primary photos first
+            { createdAt: 'asc' }    // Then by creation time
+          ]
+        },
         tags: true,
         _count: {
           select: { analyses: true }
@@ -27,7 +63,10 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(products)
+    // Transform image URLs for HTTPS contexts
+    const transformedProducts = transformImageUrls(products, request)
+
+    return NextResponse.json(transformedProducts)
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json(
@@ -57,7 +96,12 @@ export async function POST(request: NextRequest) {
         }
       },
       include: {
-        photos: true,
+        photos: {
+          orderBy: [
+            { isPrimary: 'desc' },
+            { createdAt: 'asc' }
+          ]
+        },
         tags: true
       }
     })

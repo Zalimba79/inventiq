@@ -3,8 +3,7 @@ const nextConfig = {
   // Disable x-powered-by header for security
   poweredByHeader: false,
   images: {
-    // Disable optimization to avoid cache header issues
-    unoptimized: true,
+    // Configure image domains
     remotePatterns: [
       {
         protocol: 'https',
@@ -24,6 +23,16 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '9000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'inventoscan.mindbit.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'minio.mindbit.net',
         pathname: '/**',
       },
     ],

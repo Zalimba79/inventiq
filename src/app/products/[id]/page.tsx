@@ -293,8 +293,8 @@ export default function ProductDetailPage(): JSX.Element | null {
                     {index + 1}
                   </div>
 
-                  {/* Primary badge */}
-                  {photo.isPrimary && (
+                  {/* Primary badge - show on first photo when it's primary */}
+                  {index === 0 && photo.isPrimary && (
                     <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
                       Main
                     </div>

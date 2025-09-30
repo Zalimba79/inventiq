@@ -65,6 +65,8 @@ interface ProductDBStore {
   addPhoto: (productId: string, photo: any) => Promise<void>
   deletePhoto: (productId: string, photoId: string) => Promise<void>
   setPrimaryPhoto: (productId: string, photoId: string) => Promise<void>
+  updatePhotoRotation: (productId: string, photoId: string, rotation: number) => Promise<void>
+  savePhotoRotationPermanently: (productId: string, photoId: string, rotation: number) => Promise<void>
   
   // Selection
   selectProduct: (id: string) => void
@@ -260,6 +262,7 @@ export const useProductDBStore = create<ProductDBStore>()(
       
       // Set primary photo
       setPrimaryPhoto: async (productId: string, photoId: string) => {
+        // First update local state optimistically
         set(state => ({
           products: state.products.map(p => 
             p.id === productId
@@ -273,6 +276,96 @@ export const useProductDBStore = create<ProductDBStore>()(
               : p
           )
         }))
+        
+        // Then update in database
+        try {
+          const response = await fetch(`/api/products/${productId}/photos/primary`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoId })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to update primary photo')
+          }
+          
+          // Return success
+          return true
+        } catch (error) {
+          console.error('Failed to update primary photo:', error)
+          // Revert the optimistic update on error by fetching fresh data
+          await get().fetchProducts('DRAFT')
+          return false
+        }
+      },
+      
+      // Update photo rotation
+      updatePhotoRotation: async (productId: string, photoId: string, rotation: number) => {
+        // First update local state optimistically
+        set(state => ({
+          products: state.products.map(p => 
+            p.id === productId
+              ? {
+                  ...p,
+                  photos: p.photos.map(photo => ({
+                    ...photo,
+                    angle: photo.id === photoId ? rotation.toString() : photo.angle
+                  }))
+                }
+              : p
+          )
+        }))
+        
+        // Then update in database
+        try {
+          const response = await fetch(`/api/products/${productId}/photos/rotation`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoId, rotation })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to update photo rotation')
+          }
+        } catch (error) {
+          console.error('Failed to update photo rotation:', error)
+          // Revert the optimistic update on error
+          await get().fetchProducts('DRAFT')
+        }
+      },
+      
+      // Save photo rotation permanently to MinIO
+      savePhotoRotationPermanently: async (productId: string, photoId: string, rotation: number) => {
+        try {
+          const response = await fetch(`/api/products/${productId}/photos/rotate-permanent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoId, rotation })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to save rotation permanently')
+          }
+          
+          // After successful permanent rotation, reset angle to 0 in local state
+          set(state => ({
+            products: state.products.map(p => 
+              p.id === productId
+                ? {
+                    ...p,
+                    photos: p.photos.map(photo => ({
+                      ...photo,
+                      angle: photo.id === photoId ? '0' : photo.angle
+                    }))
+                  }
+                : p
+            )
+          }))
+          
+          console.log('✅ Rotation saved permanently to MinIO')
+        } catch (error) {
+          console.error('Failed to save rotation permanently:', error)
+        }
       },
       
       // Selection

@@ -109,7 +109,9 @@ export function StudioLayoutV2({
                     ...img, 
                     url: result.url, 
                     thumbnailUrl: result.thumbnailUrl,
-                    uploadStatus: 'uploaded' 
+                    uploadStatus: 'uploaded',
+                    // Keep dataUrl as fallback
+                    dataUrl: img.dataUrl
                   }
                 : img
             ))

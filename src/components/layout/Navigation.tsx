@@ -10,7 +10,6 @@ import {
   Settings,
   User
 } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -67,15 +66,13 @@ export function Navigation(): JSX.Element {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-3">
-              <Image 
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
                 src="/logo.png" 
                 alt="Inventiq Logo" 
                 width={40} 
                 height={40}
                 className="object-contain"
-                priority={false}
-                loading="eager"
-                unoptimized
               />
               <span className="text-xl font-bold">Inventiq</span>
             </Link>
@@ -144,9 +141,11 @@ export function Navigation(): JSX.Element {
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Log out</DropdownMenuItem>

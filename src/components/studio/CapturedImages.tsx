@@ -49,7 +49,7 @@ export function CapturedImages({
         {images.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <ImageIcon className="h-12 w-12 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground" unoptimized>
+            <p className="text-sm text-muted-foreground">
               No images captured yet
             </p>
             <p className="text-xs text-muted-foreground mt-1">

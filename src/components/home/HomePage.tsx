@@ -20,6 +20,7 @@ import { RecentCaptures } from './RecentCaptures'
 import { StatsOverview } from './StatsOverview'
 import { StorageWidget } from './StorageWidget'
 import { TipsWidget } from './TipsWidget'
+import { DatabaseStatus } from '@/components/dashboard/DatabaseStatus'
 
 export function HomePage(): JSX.Element {
   const { isLoading: authLoading, user } = useAuth()
@@ -203,6 +204,9 @@ export function HomePage(): JSX.Element {
 
           {/* Sidebar Widgets */}
           <div className="space-y-6">
+            {/* Database Status */}
+            <DatabaseStatus />
+            
             {/* Storage Widget */}
             {userStats && (
               <StorageWidget
