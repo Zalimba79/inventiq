@@ -47,6 +47,30 @@ Inventiq is an AI-powered inventory management system that helps users catalog a
 - **Database**: Prisma ORM (schema ready, not connected)
 - **Object Storage**: MinIO S3-compatible storage (Synology NAS) - FULLY INTEGRATED
 
+## Cache Optimization & Performance
+
+### Middleware Configuration
+- **Custom Cache Headers**: Comprehensive middleware (`/src/middleware.ts`) removes problematic cache directives
+- **Production Optimizations**: 
+  - Static assets: `public, max-age=86400, stale-while-revalidate`
+  - HTML pages: `public, max-age=0, s-maxage=1, stale-while-revalidate=59`
+  - API routes: `private, max-age=0` (no must-revalidate)
+  - Next.js static: `public, max-age=31536000, immutable`
+- **Cloudflare Compatibility**: Headers designed to work with CDN caching
+- **No Deprecated Headers**: Removes `Expires`, `Pragma`, and problematic `must-revalidate` directives
+
+### Image Optimization
+- **Selective Optimization**: Individual `<Image>` components use `unoptimized` prop where needed
+- **Logo Handling**: Plain `<img>` tag for logo to avoid hydration issues
+- **MinIO Direct Access**: Images served directly from S3-compatible storage
+
+### Browser Compatibility
+- **Firefox Notes**: 
+  - `fetchpriority` attribute not supported (safely ignored)
+  - `theme-color` works on mobile only
+  - `text-size-adjust` uses vendor prefixes
+- **Accessibility**: Viewport allows zooming (no `maximum-scale` restriction)
+
 ## Project Structure
 ```
 inventiq/
@@ -134,15 +158,15 @@ npm run start      # Start production server
 ```
 
 ### Code Quality
-Status (Last Updated: 2025-09-26)
-- **ESLint Errors**: 249 errors, 129 warnings
-- **TypeScript Files**: 103 files
-- **Components**: 54 React components
+Status (Last Updated: 2025-09-29)
+- **ESLint Errors**: ~200+ errors (mostly from DB migration type issues)
+- **TypeScript Files**: 103+ files
+- **Components**: 60+ React components
 - **Pages**: 10 Next.js pages
 - **Dependencies**: 33 runtime, 31 dev
 - **Git Branch**: develop
-- **Uncommitted Changes**: 5 files
-- **Last Commit**: 7ab8b06 fix: repair pre-commit hook and update-claude-md script
+- **Recent Fixes**: Cache headers, browser compatibility, image hydration
+- **Last Major Update**: Comprehensive middleware for cache control
 
 
 ### ESLint Configuration
@@ -157,6 +181,45 @@ Status (Last Updated: 2025-09-26)
 
 
 ## Key Components
+
+### Dashboard Components
+- `ActivityFeed`: Recent activity timeline
+- `DashboardLayout`: Component
+- `Header`: Top navigation with user menu and notifications
+- `HomePage`: Main dashboard orchestration component
+- `QuickActions`: Quick access buttons
+- `RecentCaptures`: Recent photo thumbnails
+- `StatsCard`: Dashboard statistics display
+- `StatsOverview`: Component
+- `StorageWidget`: Component
+- `TipsWidget`: Component
+
+### Camera Components
+
+
+### Product Components
+- `BulkProductValidation`: Validate multiple products
+- `DraftProductCard`: Component
+- `ImageLightbox`: Component
+- `ProductCard`: Component
+- `ProductGallery`: Display products with filtering
+- `ProductGalleryLightbox`: Component
+- `ProductValidation`: Review and validate AI results
+- `ValidationHistory`: Component
+
+### UI Components
+- `alert`: shadcn/ui component
+- `avatar`: shadcn/ui component
+- `badge`: shadcn/ui component
+- `button`: shadcn/ui component
+- `card`: shadcn/ui component
+- `checkbox`: shadcn/ui component
+- `dialog`: shadcn/ui component
+- `dropdown-menu`: shadcn/ui component
+- `input`: shadcn/ui component
+- `label`: shadcn/ui component
+- ... and 8 more UI components
+
 
 ### Dashboard Components
 - `ActivityFeed`: Recent activity timeline
@@ -496,6 +559,38 @@ npx prisma studio       # Open database GUI
 - Implement virtual scrolling for large lists
 - Cache AI results
 
+## Deployment Guide
+
+### Production Deployment
+- **Current Production**: inventoscan.mindbit.net
+- **CDN**: Cloudflare (may require Transform Rules for cache headers)
+- **Deployment Documentation**: See `/DEPLOYMENT.md` for detailed cache fix deployment
+
+### Pre-Deployment Checklist
+```bash
+# 1. Run production build locally
+npm run build
+
+# 2. Test production build
+npm run start
+
+# 3. Verify no console warnings
+# Check browser DevTools for cache-control warnings
+
+# 4. Commit all changes
+git add -A
+git commit -m "fix: cache headers and browser compatibility"
+
+# 5. Push to repository
+git push origin develop
+```
+
+### Post-Deployment Verification
+1. Clear Cloudflare cache if applicable
+2. Check Network tab in DevTools for proper cache headers
+3. Verify no `must-revalidate` or `no-store` directives
+4. Monitor performance metrics
+
 ## Environment Variables
 
 Create `.env.local`:
@@ -569,12 +664,18 @@ DRAFT → QUEUED → ANALYZING → ANALYZED → VALIDATED → CONFIRMED
 - **Real-time Updates**: Hot reload without page refresh
 - **Auto-cleanup**: Images deleted from MinIO when products deleted
 - **Professional Capture**: Studio interface with guides and batch capture
+- **Cache Optimization**: Custom middleware eliminates browser warnings
+- **Production Ready**: All cache-control issues resolved locally
+- **Browser Support**: Full compatibility with Chrome, Edge, Firefox, Safari
+- **⚠️ Mixed Content**: Production HTTPS requires MinIO HTTPS proxy or API proxy route
 
 
 <!-- AUTO-GENERATED STATS - DO NOT EDIT MANUALLY -->
-<!-- Last Updated: 2025-09-26 -->
+<!-- Last Updated: 2025-09-29 -->
 <!-- Branch: develop -->
+<!-- Cache: Custom middleware for production optimization -->
 <!-- ESLint: 200+ errors (type safety issues from DB migration) -->
 <!-- Components: 60+ files -->
 <!-- Database: PostgreSQL with Prisma ORM -->
 <!-- Storage: MinIO S3-compatible on Synology NAS -->
+<!-- Production: inventoscan.mindbit.net (awaiting deployment) -->

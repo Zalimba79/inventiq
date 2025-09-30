@@ -87,6 +87,13 @@ After deployment, you should see:
 - Cloudflare may override headers - use Transform Rules if needed
 - Monitor performance after deployment to ensure improvements
 
+## Known Browser Compatibility Notes
+
+- **Firefox**: 
+  - The `fetchpriority` attribute on preload links is not supported but is safely ignored. This is a Next.js optimization that doesn't affect functionality.
+  - The `theme-color` meta tag is not supported on desktop Firefox but works on mobile Firefox. It's used for PWA theming in supported browsers.
+  - The `text-size-adjust` CSS property is not natively supported but vendor prefixes (`-webkit-text-size-adjust`, `-moz-text-size-adjust`) are used in globals.css.
+
 ## Rollback Plan
 
 If issues occur after deployment:
@@ -98,7 +105,116 @@ git push origin develop
 
 ## Files Modified
 
-- `/next.config.js` - Image optimization settings
-- `/src/middleware.ts` - Cache header configuration
-- `/src/app/layout.tsx` - Viewport settings
-- All components with `<Image>` tags - Added unoptimized prop
+- `/next.config.js` - Removed global `unoptimized: true` to fix hydration issues
+- `/src/middleware.ts` - Comprehensive cache header configuration for production
+- `/src/app/layout.tsx` - Removed `maximumScale: 1` for accessibility
+- `/src/components/layout/Navigation.tsx` - Changed logo from `<Image>` to `<img>` tag
+- Multiple components - Added `unoptimized` prop to individual `<Image>` components
+- `/src/app/globals.css` - Browser compatibility with vendor prefixes
+
+## Mixed Content Fix for MinIO Images
+
+### Problem
+Production site (HTTPS) cannot load MinIO images (HTTP) due to browser mixed content security restrictions.
+
+### Solutions
+
+#### Option 1: Use HTTPS Proxy for MinIO (Recommended)
+Configure a reverse proxy (nginx/Cloudflare) to serve MinIO over HTTPS:
+```nginx
+server {
+    listen 443 ssl;
+    server_name minio.inventoscan.mindbit.net;
+    
+    location / {
+        proxy_pass http://10.2.200.102:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Then update production environment:
+```env
+S3_PUBLIC_URL=https://minio.inventoscan.mindbit.net
+```
+
+#### Option 2: Use Cloudflare Tunnel
+Set up Cloudflare tunnel to expose MinIO securely:
+1. Install cloudflared on MinIO server
+2. Create tunnel: `cloudflared tunnel create minio-inventiq`
+3. Configure tunnel to point to localhost:9000
+4. Update S3_PUBLIC_URL to use Cloudflare tunnel URL
+
+#### Option 3: Configure MinIO with SSL Certificate
+1. Generate SSL certificate for MinIO
+2. Configure MinIO to use HTTPS
+3. Update S3_ENDPOINT and S3_PUBLIC_URL to use https://
+
+#### Option 4: Use Next.js API Proxy (Temporary)
+Create an API route to proxy images through the Next.js server:
+```typescript
+// /api/proxy/image/route.ts
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const imageUrl = url.searchParams.get('url')
+  
+  if (!imageUrl?.includes('10.2.200.102:9000')) {
+    return new Response('Invalid URL', { status: 400 })
+  }
+  
+  const response = await fetch(imageUrl)
+  const buffer = await response.arrayBuffer()
+  
+  return new Response(buffer, {
+    headers: {
+      'Content-Type': response.headers.get('Content-Type') || 'image/jpeg',
+      'Cache-Control': 'public, max-age=31536000'
+    }
+  })
+}
+```
+
+## Current Status (2025-09-29)
+
+### ✅ Fixed Locally
+- Cache-control warnings eliminated through middleware configuration
+- Viewport accessibility issue resolved
+- Image hydration mismatches fixed
+- Logo properly loading without Next.js Image optimization
+- Browser compatibility warnings documented
+
+### ⏳ Awaiting Production Deployment
+The following issues will be resolved once changes are deployed to production:
+1. Cache-control headers with `must-revalidate` and `no-store` directives
+2. Deprecated `Expires` and `Pragma` headers
+3. Proper cache headers for all resource types
+
+### 🚨 Critical: Mixed Content Issue on Production
+**Problem**: HTTPS site (inventoscan.mindbit.net) cannot load HTTP MinIO images (10.2.200.102:9000)
+
+**Immediate Fix Applied**: 
+- Created `/api/proxy/image` route to proxy HTTP images through HTTPS
+- Added `getSecureImageUrl()` utility function
+- Updated `DraftProductCard` component to use secure URLs
+
+**Production Environment Variable Needed**:
+```env
+# For production, configure one of these:
+# Option 1: HTTPS proxy for MinIO
+S3_PUBLIC_URL=https://minio.inventoscan.mindbit.net
+
+# Option 2: Use Cloudflare tunnel
+S3_PUBLIC_URL=https://minio-tunnel.inventoscan.mindbit.net
+
+# Current (causes mixed content):
+# S3_PUBLIC_URL=http://10.2.200.102:9000
+```
+
+### 📝 Post-Deployment Checklist
+- [ ] Deploy changes to production environment
+- [ ] Clear Cloudflare cache if applicable
+- [ ] Verify cache headers in Chrome DevTools Network tab
+- [ ] Check for any remaining console warnings
+- [ ] Monitor performance metrics
+- [ ] Update Cloudflare Transform Rules if headers are still overridden

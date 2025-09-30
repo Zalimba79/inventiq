@@ -7,6 +7,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { getSecureImageUrl } from '@/lib/utils/image-proxy'
 import { cn } from '@/lib/utils'
 
 
@@ -24,6 +25,9 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [imageResolution, setImageResolution] = useState<{ width: number, height: number } | null>(null)
+  
+  // Convert to secure URL for HTTPS pages
+  const secureImageSrc = getSecureImageUrl(imageSrc) || imageSrc
 
   // Reset when opening and get image resolution
   useEffect(() => {
@@ -41,9 +45,9 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
           height: img.naturalHeight
         })
       }
-      img.src = imageSrc
+      img.src = secureImageSrc
     }
-  }, [isOpen, imageSrc])
+  }, [isOpen, secureImageSrc])
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 0.5, 5))
@@ -234,7 +238,7 @@ export const ImageLightbox = ({ isOpen, onClose, imageSrc, imageAlt = 'Product' 
         >
           {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
           <Image
-            src={imageSrc}
+            src={secureImageSrc}
             alt={imageAlt}
             width={1200}
             height={800}

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { getSecureImageUrl } from '@/lib/utils/image-proxy'
 import { cn } from '@/lib/utils'
 import { type Product, type ProductPhoto, type ProductStatus } from '@/store/product-store'
 
@@ -103,6 +104,9 @@ function ProductGridContent({
   onReanalyze,
   onImageClick
 }: ProductContentProps): JSX.Element {
+  const imageUrl = primaryPhoto?.url || primaryPhoto?.dataUrl || ''
+  const secureImageUrl = getSecureImageUrl(imageUrl) || imageUrl
+  
   return (
     <CardContent className="p-3">
       {/* Product Image */}
@@ -111,14 +115,14 @@ function ProductGridContent({
         className="aspect-square bg-muted rounded-md mb-2 overflow-hidden relative group cursor-pointer w-full focus:outline-none focus:ring-2 focus:ring-primary"
         onClick={(e) => {
           e.stopPropagation()
-          onImageClick?.(primaryPhoto?.dataUrl ?? '', product.name ?? 'Product')
+          onImageClick?.(secureImageUrl, product.name ?? 'Product')
         }}
         aria-label={`View ${product.name ?? 'product'} image`}
       >
-        {primaryPhoto?.dataUrl && (
+        {secureImageUrl && (
           <>
             <Image
-              src={primaryPhoto.dataUrl}
+              src={secureImageUrl}
               alt={product.name ?? 'Product'}
               fill
               className="object-cover transition-transform duration-200 group-hover:scale-105"
@@ -184,6 +188,9 @@ function ProductListContent({
   onReanalyze,
   onImageClick
 }: ProductContentProps): JSX.Element {
+  const imageUrl = primaryPhoto?.url || primaryPhoto?.dataUrl || ''
+  const secureImageUrl = getSecureImageUrl(imageUrl) || imageUrl
+  
   return (
     <CardContent className="p-3 flex gap-3 flex-1">
       {/* Thumbnail */}
@@ -192,14 +199,14 @@ function ProductListContent({
         className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary relative"
         onClick={(e) => {
           e.stopPropagation()
-          onImageClick?.(primaryPhoto?.dataUrl ?? '', product.name ?? 'Product')
+          onImageClick?.(secureImageUrl, product.name ?? 'Product')
         }}
         aria-label={`View ${product.name ?? 'product'} image`}
       >
-        {primaryPhoto?.dataUrl && (
+        {secureImageUrl && (
           <>
             <Image
-              src={primaryPhoto.dataUrl}
+              src={secureImageUrl}
               alt={product.name ?? 'Product'}
               width={80}
               height={80}

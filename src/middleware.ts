@@ -6,6 +6,9 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl
   const isDevelopment = process.env.NODE_ENV === 'development'
   const isProduction = process.env.NODE_ENV === 'production'
+  const isHTTPS = request.headers.get('x-forwarded-proto') === 'https' || 
+                  request.url.startsWith('https://') ||
+                  request.headers.get('cf-visitor')?.includes('https')
 
   // Remove all problematic headers first (including Cloudflare's and deprecated headers)
   response.headers.delete('Cache-Control')
@@ -129,6 +132,22 @@ export function middleware(request: NextRequest) {
 
   // Remove problematic headers
   response.headers.delete('X-Powered-By')
+
+  // Fix mixed content issues for MinIO images on HTTPS sites
+  if (isHTTPS && isProduction) {
+    // Set Content Security Policy to upgrade insecure requests
+    // This will automatically convert HTTP image requests to HTTPS
+    response.headers.set(
+      'Content-Security-Policy',
+      "upgrade-insecure-requests; default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+    )
+    
+    // Also set a more permissive CSP for images specifically
+    response.headers.set(
+      'Content-Security-Policy-Report-Only',
+      "img-src * data: blob: 'unsafe-inline';"
+    )
+  }
 
   return response
 }
